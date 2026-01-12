@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { Resume } from "~/lib/types";
-import { resumeSchema, emptyResume } from "~/lib/types";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "~/hooks/use-session";
+import type { Resume } from "~/lib/types";
+import { emptyResume, resumeSchema } from "~/lib/types";
 
 const STORAGE_KEY = "resume-matcher-resume-data";
 const STORAGE_UPDATED_AT_KEY = "resume-matcher-resume-updated-at";
@@ -9,205 +9,218 @@ const STORAGE_UPDATED_AT_KEY = "resume-matcher-resume-updated-at";
 export type SyncStatus = "idle" | "syncing" | "synced" | "error";
 
 interface UseResumeStorageReturn {
-  resume: Resume;
-  setResume: (resume: Resume) => void;
-  updateResumeField: <K extends keyof Resume>(
-    key: K,
-    value: Resume[K]
-  ) => void;
-  clearResume: () => void;
-  isLoaded: boolean;
-  syncStatus: SyncStatus;
-  lastSyncedAt: Date | null;
+	resume: Resume;
+	setResume: (resume: Resume) => void;
+	updateResumeField: <K extends keyof Resume>(key: K, value: Resume[K]) => void;
+	clearResume: () => void;
+	isLoaded: boolean;
+	syncStatus: SyncStatus;
+	lastSyncedAt: Date | null;
 }
 
 export function useResumeStorage(): UseResumeStorageReturn {
-  const { user, isAuthenticated, isLoading: authLoading } = useSession();
-  const [resume, setResumeState] = useState<Resume>(emptyResume);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
-  const isInitialLoad = useRef(true);
-  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const { isAuthenticated, isLoading: authLoading } = useSession();
+	const [resume, setResumeState] = useState<Resume>(emptyResume);
+	const [isLoaded, setIsLoaded] = useState(false);
+	const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+	const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+	const isInitialLoad = useRef(true);
+	const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const saveToLocalStorage = useCallback((data: Resume) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      localStorage.setItem(STORAGE_UPDATED_AT_KEY, new Date().toISOString());
-    } catch (error) {
-      console.error("Error saving resume to localStorage:", error);
-    }
-  }, []);
+	const saveToLocalStorage = useCallback((data: Resume) => {
+		try {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+			localStorage.setItem(STORAGE_UPDATED_AT_KEY, new Date().toISOString());
+		} catch (error) {
+			console.error("Error saving resume to localStorage:", error);
+		}
+	}, []);
 
-  const loadFromLocalStorage = useCallback((): { resume: Resume | null; updatedAt: Date | null } => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const updatedAtStr = localStorage.getItem(STORAGE_UPDATED_AT_KEY);
-      
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const result = resumeSchema.safeParse(parsed);
-        if (result.success) {
-          return {
-            resume: result.data,
-            updatedAt: updatedAtStr ? new Date(updatedAtStr) : null,
-          };
-        }
-      }
-    } catch (error) {
-      console.error("Error loading resume from localStorage:", error);
-    }
-    return { resume: null, updatedAt: null };
-  }, []);
+	const loadFromLocalStorage = useCallback((): {
+		resume: Resume | null;
+		updatedAt: Date | null;
+	} => {
+		try {
+			const stored = localStorage.getItem(STORAGE_KEY);
+			const updatedAtStr = localStorage.getItem(STORAGE_UPDATED_AT_KEY);
 
-  const saveToCloud = useCallback(async (data: Resume) => {
-    if (!isAuthenticated) return;
+			if (stored) {
+				const parsed = JSON.parse(stored);
+				const result = resumeSchema.safeParse(parsed);
+				if (result.success) {
+					return {
+						resume: result.data,
+						updatedAt: updatedAtStr ? new Date(updatedAtStr) : null,
+					};
+				}
+			}
+		} catch (error) {
+			console.error("Error loading resume from localStorage:", error);
+		}
+		return { resume: null, updatedAt: null };
+	}, []);
 
-    setSyncStatus("syncing");
-    try {
-      const response = await fetch("/api/resume", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resume: data }),
-      });
+	const saveToCloud = useCallback(
+		async (data: Resume) => {
+			if (!isAuthenticated) return;
 
-      if (!response.ok) {
-        throw new Error("Failed to save to cloud");
-      }
+			setSyncStatus("syncing");
+			try {
+				const response = await fetch("/api/resume", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ resume: data }),
+				});
 
-      const result = await response.json();
-      if (result.success && result.updatedAt) {
-        setLastSyncedAt(new Date(result.updatedAt));
-        localStorage.setItem(STORAGE_UPDATED_AT_KEY, result.updatedAt);
-      }
-      setSyncStatus("synced");
+				if (!response.ok) {
+					throw new Error("Failed to save to cloud");
+				}
 
-      setTimeout(() => setSyncStatus("idle"), 2000);
-    } catch (error) {
-      console.error("Error saving resume to cloud:", error);
-      setSyncStatus("error");
-      setTimeout(() => setSyncStatus("idle"), 3000);
-    }
-  }, [isAuthenticated]);
+				const result = await response.json();
+				if (result.success && result.updatedAt) {
+					setLastSyncedAt(new Date(result.updatedAt));
+					localStorage.setItem(STORAGE_UPDATED_AT_KEY, result.updatedAt);
+				}
+				setSyncStatus("synced");
 
-  const loadFromCloud = useCallback(async (): Promise<{ resume: Resume | null; updatedAt: Date | null }> => {
-    try {
-      const response = await fetch("/api/resume");
-      if (!response.ok) {
-        if (response.status === 401) {
-          return { resume: null, updatedAt: null };
-        }
-        throw new Error("Failed to load from cloud");
-      }
+				setTimeout(() => setSyncStatus("idle"), 2000);
+			} catch (error) {
+				console.error("Error saving resume to cloud:", error);
+				setSyncStatus("error");
+				setTimeout(() => setSyncStatus("idle"), 3000);
+			}
+		},
+		[isAuthenticated],
+	);
 
-      const result = await response.json();
-      if (result.resume) {
-        const validationResult = resumeSchema.safeParse(result.resume);
-        if (validationResult.success) {
-          return {
-            resume: validationResult.data,
-            updatedAt: result.updatedAt ? new Date(result.updatedAt) : null,
-          };
-        }
-      }
-    } catch (error) {
-      console.error("Error loading resume from cloud:", error);
-    }
-    return { resume: null, updatedAt: null };
-  }, []);
+	const loadFromCloud = useCallback(async (): Promise<{
+		resume: Resume | null;
+		updatedAt: Date | null;
+	}> => {
+		try {
+			const response = await fetch("/api/resume");
+			if (!response.ok) {
+				if (response.status === 401) {
+					return { resume: null, updatedAt: null };
+				}
+				throw new Error("Failed to load from cloud");
+			}
 
-  useEffect(() => {
-    if (authLoading) return;
+			const result = await response.json();
+			if (result.resume) {
+				const validationResult = resumeSchema.safeParse(result.resume);
+				if (validationResult.success) {
+					return {
+						resume: validationResult.data,
+						updatedAt: result.updatedAt ? new Date(result.updatedAt) : null,
+					};
+				}
+			}
+		} catch (error) {
+			console.error("Error loading resume from cloud:", error);
+		}
+		return { resume: null, updatedAt: null };
+	}, []);
 
-    const initializeData = async () => {
-      const localData = loadFromLocalStorage();
+	useEffect(() => {
+		if (authLoading) return;
 
-      if (isAuthenticated) {
-        const cloudData = await loadFromCloud();
+		const initializeData = async () => {
+			const localData = loadFromLocalStorage();
 
-        if (cloudData.resume) {
-          const localTime = localData.updatedAt?.getTime() ?? 0;
-          const cloudTime = cloudData.updatedAt?.getTime() ?? 0;
+			if (isAuthenticated) {
+				const cloudData = await loadFromCloud();
 
-          if (cloudTime >= localTime) {
-            setResumeState(cloudData.resume);
-            saveToLocalStorage(cloudData.resume);
-            setLastSyncedAt(cloudData.updatedAt);
-          } else {
-            setResumeState(localData.resume ?? emptyResume);
-            saveToCloud(localData.resume ?? emptyResume);
-          }
-        } else if (localData.resume) {
-          setResumeState(localData.resume);
-          saveToCloud(localData.resume);
-        }
-      } else if (localData.resume) {
-        setResumeState(localData.resume);
-      }
+				if (cloudData.resume) {
+					const localTime = localData.updatedAt?.getTime() ?? 0;
+					const cloudTime = cloudData.updatedAt?.getTime() ?? 0;
 
-      setIsLoaded(true);
-      isInitialLoad.current = false;
-    };
+					if (cloudTime >= localTime) {
+						setResumeState(cloudData.resume);
+						saveToLocalStorage(cloudData.resume);
+						setLastSyncedAt(cloudData.updatedAt);
+					} else {
+						setResumeState(localData.resume ?? emptyResume);
+						saveToCloud(localData.resume ?? emptyResume);
+					}
+				} else if (localData.resume) {
+					setResumeState(localData.resume);
+					saveToCloud(localData.resume);
+				}
+			} else if (localData.resume) {
+				setResumeState(localData.resume);
+			}
 
-    initializeData();
-  }, [authLoading, isAuthenticated, loadFromLocalStorage, loadFromCloud, saveToLocalStorage, saveToCloud]);
+			setIsLoaded(true);
+			isInitialLoad.current = false;
+		};
 
-  useEffect(() => {
-    if (isInitialLoad.current || !isLoaded) return;
+		initializeData();
+	}, [
+		authLoading,
+		isAuthenticated,
+		loadFromLocalStorage,
+		loadFromCloud,
+		saveToLocalStorage,
+		saveToCloud,
+	]);
 
-    saveToLocalStorage(resume);
+	useEffect(() => {
+		if (isInitialLoad.current || !isLoaded) return;
 
-    if (isAuthenticated) {
-      if (syncTimeoutRef.current) {
-        clearTimeout(syncTimeoutRef.current);
-      }
+		saveToLocalStorage(resume);
 
-      syncTimeoutRef.current = setTimeout(() => {
-        saveToCloud(resume);
-      }, 1000);
-    }
+		if (isAuthenticated) {
+			if (syncTimeoutRef.current) {
+				clearTimeout(syncTimeoutRef.current);
+			}
 
-    return () => {
-      if (syncTimeoutRef.current) {
-        clearTimeout(syncTimeoutRef.current);
-      }
-    };
-  }, [resume, isLoaded, isAuthenticated, saveToLocalStorage, saveToCloud]);
+			syncTimeoutRef.current = setTimeout(() => {
+				saveToCloud(resume);
+			}, 1000);
+		}
 
-  const setResume = useCallback((newResume: Resume) => {
-    setResumeState(newResume);
-  }, []);
+		return () => {
+			if (syncTimeoutRef.current) {
+				clearTimeout(syncTimeoutRef.current);
+			}
+		};
+	}, [resume, isLoaded, isAuthenticated, saveToLocalStorage, saveToCloud]);
 
-  const updateResumeField = useCallback(
-    <K extends keyof Resume>(key: K, value: Resume[K]) => {
-      setResumeState((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
-    },
-    []
-  );
+	const setResume = useCallback((newResume: Resume) => {
+		setResumeState(newResume);
+	}, []);
 
-  const clearResume = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_UPDATED_AT_KEY);
-      setResumeState(emptyResume);
-      if (isAuthenticated) {
-        saveToCloud(emptyResume);
-      }
-    } catch (error) {
-      console.error("Error clearing resume from localStorage:", error);
-    }
-  }, [isAuthenticated, saveToCloud]);
+	const updateResumeField = useCallback(
+		<K extends keyof Resume>(key: K, value: Resume[K]) => {
+			setResumeState((prev) => ({
+				...prev,
+				[key]: value,
+			}));
+		},
+		[],
+	);
 
-  return {
-    resume,
-    setResume,
-    updateResumeField,
-    clearResume,
-    isLoaded,
-    syncStatus,
-    lastSyncedAt,
-  };
+	const clearResume = useCallback(() => {
+		try {
+			localStorage.removeItem(STORAGE_KEY);
+			localStorage.removeItem(STORAGE_UPDATED_AT_KEY);
+			setResumeState(emptyResume);
+			if (isAuthenticated) {
+				saveToCloud(emptyResume);
+			}
+		} catch (error) {
+			console.error("Error clearing resume from localStorage:", error);
+		}
+	}, [isAuthenticated, saveToCloud]);
+
+	return {
+		resume,
+		setResume,
+		updateResumeField,
+		clearResume,
+		isLoaded,
+		syncStatus,
+		lastSyncedAt,
+	};
 }
