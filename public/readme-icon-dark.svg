@@ -1,0 +1,38 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Document gradient (same as light theme - works on both backgrounds) -->
+    <linearGradient id="docGradIconDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <!-- AI accent gradient -->
+    <linearGradient id="accentGradIconDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Centered document icon -->
+  <g transform="translate(12, 7)">
+    <!-- Main document -->
+    <rect x="0" y="0" width="40" height="50" rx="3" fill="url(#docGradIconDark)" stroke="#60a5fa" stroke-width="0.5"/>
+
+    <!-- Document fold -->
+    <path d="M40 0 L37 3 L40 3 Z" fill="#60a5fa" opacity="0.3"/>
+
+    <!-- Text lines inside document -->
+    <rect x="6" y="8" width="28" height="2" rx="1" fill="white" opacity="0.9"/>
+    <rect x="6" y="13" width="22" height="2" rx="1" fill="white" opacity="0.7"/>
+    <rect x="6" y="18" width="26" height="2" rx="1" fill="white" opacity="0.7"/>
+    <rect x="6" y="23" width="20" height="2" rx="1" fill="white" opacity="0.7"/>
+
+    <!-- Job target circle overlay -->
+    <circle cx="32" cy="35" r="8" fill="none" stroke="url(#accentGradIconDark)" stroke-width="1.5" opacity="0.8"/>
+    <circle cx="32" cy="35" r="4" fill="none" stroke="url(#accentGradIconDark)" stroke-width="1" opacity="0.6"/>
+    <circle cx="32" cy="35" r="1.5" fill="url(#accentGradIconDark)"/>
+
+    <!-- Success checkmarks -->
+    <path d="M8 30 L11 33 L16 28" stroke="url(#accentGradIconDark)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 38 L11 41 L16 36" stroke="url(#accentGradIconDark)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
