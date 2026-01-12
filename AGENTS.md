@@ -4,10 +4,14 @@
 React Router v7 full-stack application with TypeScript, Tailwind CSS v4, and Zod for validation. The app tailors resumes to job descriptions using AI.
 
 ## Build Commands
-- `npm run dev` - Start development server at http://localhost:5173
-- `npm run build` - Production build (runs react-router build)
-- `npm run start` - Run production server (uses react-router-serve)
-- `npm run typecheck` - Generate types and run TypeScript compiler (react-router typegen && tsc)
+- `pnpm run dev` - Start development server at http://localhost:5173
+- `pnpm run build` - Production build (runs react-router build)
+- `pnpm run start` - Run production server (uses react-router-serve)
+- `pnpm run typecheck` - Generate types and run TypeScript compiler (react-router typegen && tsc)
+- `pnpm run lint` - Run Biome linter
+- `pnpm run lint:fix` - Auto-fix Biome issues
+- `pnpm run format` - Check code formatting
+- `pnpm run format:write` - Apply code formatting
 
 ## Code Style Guidelines
 

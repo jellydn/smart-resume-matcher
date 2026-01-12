@@ -41,13 +41,13 @@ Job hunting is time-consuming, and tailoring resumes for each application is ted
 2. **Install dependencies**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Start development server**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 4. **Open your browser** to `http://localhost:5173`
@@ -196,19 +196,19 @@ Click "Test Connection" to verify your API key works.
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Start dev server
-npm run dev
+pnpm run dev
 
 # Type check
-npm run typecheck
+pnpm run typecheck
 
 # Build for production
-npm run build
+pnpm run build
 
 # Run linter
-npm run lint
+pnpm run lint
 ```
 
 ## 🤝 Contributing
