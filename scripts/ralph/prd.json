@@ -1,510 +1,505 @@
 {
-	"project": "Resume Matcher",
-	"branchName": "ralph/resume-matcher",
-	"description": "LinkedIn Resume Matcher - A web app that tailors resumes to job postings using AI",
-	"userStories": [
-		{
-			"id": "US-001",
-			"title": "Project setup with Remix/TanStack Start and shadcn/ui",
-			"description": "As a developer, I need the base project scaffolded so I can start building features.",
-			"acceptanceCriteria": [
-				"Initialize Remix or TanStack Start project in SPA mode",
-				"Install and configure Tailwind CSS",
-				"Install and configure shadcn/ui components",
-				"Create basic app layout with header and main content area",
-				"Dev server runs without errors",
-				"Typecheck passes"
-			],
-			"priority": 1,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-002",
-			"title": "Define Resume TypeScript types and JSON schema",
-			"description": "As a developer, I need TypeScript types for the resume data structure.",
-			"acceptanceCriteria": [
-				"Create types for: Personal, Experience, Education, Skills, Languages, Certifications, Projects, OpenSource",
-				"Create main Resume type combining all sections",
-				"Add Zod schema for runtime validation",
-				"Export types from shared location",
-				"Typecheck passes"
-			],
-			"priority": 2,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-003",
-			"title": "JSON file upload component",
-			"description": "As a user, I want to upload a JSON file containing my resume data.",
-			"acceptanceCriteria": [
-				"File input accepts only .json files",
-				"Drag-and-drop zone for file upload",
-				"Validates uploaded JSON against Zod schema",
-				"Shows error message for invalid JSON with specific validation errors",
-				"On success, stores parsed data in state",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 3,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-004",
-			"title": "Personal Info form section",
-			"description": "As a user, I want to enter my personal information via a form.",
-			"acceptanceCriteria": [
-				"Form fields: name, email, phone, location, linkedin, website, summary",
-				"Summary field is a textarea",
-				"Required field validation for name and email",
-				"Form state managed with react-hook-form or similar",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 4,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-005",
-			"title": "Experience form section",
-			"description": "As a user, I want to add multiple work experience entries.",
-			"acceptanceCriteria": [
-				"Dynamic list: add/remove experience entries",
-				"Fields per entry: title, company, location, startDate, endDate, current checkbox, description",
-				"Highlights field as dynamic list of strings",
-				"When 'current' is checked, endDate is disabled",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 5,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-006",
-			"title": "Education form section",
-			"description": "As a user, I want to add my education history.",
-			"acceptanceCriteria": [
-				"Dynamic list: add/remove education entries",
-				"Fields: degree, institution, location, graduationDate, gpa (optional)",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 6,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-007",
-			"title": "Skills form section",
-			"description": "As a user, I want to add my skills with proficiency levels.",
-			"acceptanceCriteria": [
-				"Dynamic list: add/remove skills",
-				"Each skill has name (text) and level (select: beginner/intermediate/advanced/expert)",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 7,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-008",
-			"title": "Languages and Certifications form sections",
-			"description": "As a user, I want to add languages and certifications.",
-			"acceptanceCriteria": [
-				"Languages: dynamic list with name and proficiency (basic/conversational/professional/native)",
-				"Certifications: dynamic list with name, issuer, date, url (optional)",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 8,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-009",
-			"title": "Projects form section",
-			"description": "As a user, I want to add my projects.",
-			"acceptanceCriteria": [
-				"Dynamic list: add/remove projects",
-				"Fields: name, description, url (optional), technologies (tag input), highlights (list), startDate, endDate",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 9,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-010",
-			"title": "Open Source contributions form section",
-			"description": "As a user, I want to add my open source contributions.",
-			"acceptanceCriteria": [
-				"Dynamic list: add/remove open source entries",
-				"Fields: project name, role (select: contributor/maintainer/creator), url, description, contributions (list)",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 10,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-011",
-			"title": "Export resume data as JSON",
-			"description": "As a user, I want to export my entered data as a JSON file.",
-			"acceptanceCriteria": [
-				"Export JSON button visible when resume data exists",
-				"Downloads formatted JSON file named 'resume.json'",
-				"Exported JSON matches the schema and can be re-imported",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 11,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-012",
-			"title": "localStorage persistence for resume data",
-			"description": "As a user, I want my resume data saved automatically so I don't lose my work.",
-			"acceptanceCriteria": [
-				"Resume data auto-saves to localStorage on change (debounced)",
-				"On page load, restore data from localStorage if exists",
-				"Clear data button with confirmation dialog",
-				"Typecheck passes"
-			],
-			"priority": 12,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-013",
-			"title": "Job description input page",
-			"description": "As a user, I want to paste a job description for AI analysis.",
-			"acceptanceCriteria": [
-				"Large textarea for pasting job description",
-				"Optional text field for LinkedIn job URL",
-				"Submit button to proceed to AI analysis",
-				"Validates that job description is not empty",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 13,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-014",
-			"title": "AI provider settings UI",
-			"description": "As a user, I want to configure my AI provider.",
-			"acceptanceCriteria": [
-				"Settings panel/modal accessible from header",
-				"Provider select: OpenRouter, OpenAI, Anthropic, Browser AI, Ollama",
-				"API key input field (shown for OpenRouter/OpenAI/Anthropic)",
-				"Security warning displayed when entering API key",
-				"API key stored in localStorage",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 14,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-015",
-			"title": "AI provider abstraction layer",
-			"description": "As a developer, I need a unified interface to call different AI providers.",
-			"acceptanceCriteria": [
-				"Create AIProvider interface with generateCompletion method",
-				"Implement OpenRouterProvider (uses OpenRouter API)",
-				"Implement OpenAIProvider (uses OpenAI API)",
-				"Implement AnthropicProvider (uses Anthropic API)",
-				"Factory function to get provider based on settings",
-				"Typecheck passes"
-			],
-			"priority": 15,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-016",
-			"title": "Browser AI provider (WebLLM)",
-			"description": "As a developer, I need browser-based AI for users without API keys.",
-			"acceptanceCriteria": [
-				"Implement BrowserAIProvider using WebLLM or Transformers.js",
-				"Show loading indicator while model downloads",
-				"Graceful fallback message if browser doesn't support WebGPU",
-				"Typecheck passes"
-			],
-			"priority": 16,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-017",
-			"title": "Ollama provider for local AI",
-			"description": "As a developer, I need Ollama integration for local AI.",
-			"acceptanceCriteria": [
-				"Implement OllamaProvider calling localhost:11434",
-				"Settings field for custom Ollama URL",
-				"Model selection dropdown (fetched from Ollama API)",
-				"Error message if Ollama not running",
-				"Typecheck passes"
-			],
-			"priority": 17,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-018",
-			"title": "Test AI connection button",
-			"description": "As a user, I want to verify my AI configuration works.",
-			"acceptanceCriteria": [
-				"Test Connection button in AI settings",
-				"Sends simple test prompt to selected provider",
-				"Shows success/failure message",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 18,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-019",
-			"title": "Resume tailoring prompt engineering",
-			"description": "As a developer, I need the AI prompt for tailoring resumes.",
-			"acceptanceCriteria": [
-				"Create prompt template that takes resume JSON and job description",
-				"Prompt instructs AI to: identify matching skills, suggest reworded bullets, calculate match score",
-				"Prompt explicitly forbids fabricating experience",
-				"Response format is structured JSON",
-				"Typecheck passes"
-			],
-			"priority": 19,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-020",
-			"title": "Resume tailoring API call and response parsing",
-			"description": "As a developer, I need to call AI and parse tailoring suggestions.",
-			"acceptanceCriteria": [
-				"Function that sends resume + job description to AI provider",
-				"Parses AI response into TailoredResume type",
-				"Handles AI errors gracefully with user-friendly message",
-				"Loading state while AI processes",
-				"Typecheck passes"
-			],
-			"priority": 20,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-021",
-			"title": "Match score display",
-			"description": "As a user, I want to see how well my resume matches the job.",
-			"acceptanceCriteria": [
-				"Display match percentage/score from AI response",
-				"Visual indicator (progress bar or ring)",
-				"List of matching skills highlighted",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 21,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-022",
-			"title": "Side-by-side resume comparison view",
-			"description": "As a user, I want to see original vs tailored resume side by side.",
-			"acceptanceCriteria": [
-				"Two-column layout: original on left, tailored on right",
-				"Differences highlighted (changed text in different color)",
-				"Scrolls are synchronized between columns",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 22,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-023",
-			"title": "Accept/reject individual AI suggestions",
-			"description": "As a user, I want to accept or reject each AI suggestion.",
-			"acceptanceCriteria": [
-				"Each AI suggestion has accept/reject buttons",
-				"Accepting applies the change to final resume",
-				"Rejecting keeps original text",
-				"Visual indicator for accepted/rejected/pending suggestions",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 23,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-024",
-			"title": "Manual edit capability in preview",
-			"description": "As a user, I want to manually edit any section before downloading.",
-			"acceptanceCriteria": [
-				"Click to edit any text section in the tailored resume",
-				"Inline editing with save/cancel",
-				"Changes reflect immediately in preview",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 24,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-025",
-			"title": "PDF export with resume template",
-			"description": "As a user, I want to download my tailored resume as PDF.",
-			"acceptanceCriteria": [
-				"Download PDF button generates formatted PDF",
-				"Clean, professional single-column resume template",
-				"All sections included: personal, summary, experience, education, skills, projects, etc.",
-				"Filename format: 'Resume_[Name]_[Company].pdf'",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 25,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-026",
-			"title": "DOCX export",
-			"description": "As a user, I want to download my tailored resume as Word document.",
-			"acceptanceCriteria": [
-				"Download DOCX button generates Word document",
-				"Same template styling as PDF",
-				"Uses docx.js for client-side generation",
-				"Filename format: 'Resume_[Name]_[Company].docx'",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 26,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-027",
-			"title": "Job history in localStorage",
-			"description": "As a user, I want my recent job applications saved locally.",
-			"acceptanceCriteria": [
-				"Save last 10 job descriptions to localStorage",
-				"Each entry has: job title (extracted), company (extracted), date, job description",
-				"History list in sidebar or dropdown",
-				"Click to reload a previous job",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 27,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-028",
-			"title": "Step wizard navigation",
-			"description": "As a user, I want a clear step-by-step flow through the app.",
-			"acceptanceCriteria": [
-				"Step indicator showing: 1) Enter Data → 2) Paste Job → 3) Configure AI → 4) Review & Download",
-				"Previous/Next buttons for navigation",
-				"Validation before proceeding to next step",
-				"Can jump back to previous steps",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 28,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-029",
-			"title": "Dark/light mode toggle",
-			"description": "As a user, I want to switch between dark and light themes.",
-			"acceptanceCriteria": [
-				"Theme toggle button in header",
-				"Respects system preference by default",
-				"Persists preference in localStorage",
-				"All components render correctly in both themes",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 29,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-030",
-			"title": "Database schema for user accounts",
-			"description": "As a developer, I need database tables for optional user accounts.",
-			"acceptanceCriteria": [
-				"Users table: id, email, password_hash, created_at",
-				"Resumes table: id, user_id, data (JSON), updated_at",
-				"JobHistory table: id, user_id, job_data (JSON), created_at",
-				"Migration script created",
-				"Typecheck passes"
-			],
-			"priority": 30,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-031",
-			"title": "User registration and login UI",
-			"description": "As a user, I want to optionally create an account.",
-			"acceptanceCriteria": [
-				"Sign up form: email, password, confirm password",
-				"Login form: email, password",
-				"Forms in modal or separate page",
-				"App fully usable without signing up",
-				"Typecheck passes",
-				"Verify in browser using dev-browser skill"
-			],
-			"priority": 31,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-032",
-			"title": "Authentication backend",
-			"description": "As a developer, I need auth endpoints for login/signup.",
-			"acceptanceCriteria": [
-				"POST /api/auth/signup - creates user, returns JWT",
-				"POST /api/auth/login - validates credentials, returns JWT",
-				"JWT stored in httpOnly cookie or localStorage",
-				"Password hashed with bcrypt",
-				"Typecheck passes"
-			],
-			"priority": 32,
-			"passes": false,
-			"notes": ""
-		},
-		{
-			"id": "US-033",
-			"title": "Sync resume data to account",
-			"description": "As a logged-in user, I want my resume synced to my account.",
-			"acceptanceCriteria": [
-				"On login, fetch resume from server if exists",
-				"Merge with localStorage data (prompt user if conflict)",
-				"Auto-save changes to server when logged in",
-				"Typecheck passes"
-			],
-			"priority": 33,
-			"passes": false,
-			"notes": ""
-		}
-	]
+  "project": "LinkedIn Resume Matcher",
+  "branchName": "ralph/linkedin-resume-matcher",
+  "description": "A web application that helps job seekers tailor their resumes to specific LinkedIn job postings using AI",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Project Setup with Remix and Tailwind",
+      "description": "As a developer, I need the base project structure with Remix SPA mode, Tailwind CSS, and shadcn/ui configured.",
+      "acceptanceCriteria": [
+        "Initialize Remix project in SPA mode",
+        "Configure Tailwind CSS",
+        "Install and configure shadcn/ui",
+        "Create basic layout with header and main content area",
+        "Add dark/light mode toggle",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Resume TypeScript Schema",
+      "description": "As a developer, I need TypeScript types and Zod schemas for the resume data structure.",
+      "acceptanceCriteria": [
+        "Create Resume type matching the JSON schema in PRD",
+        "Create Zod validation schema for resume data",
+        "Export types from a shared location (e.g., lib/types.ts)",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "JSON Resume Upload Component",
+      "description": "As a user, I want to upload a JSON file containing my professional data.",
+      "acceptanceCriteria": [
+        "File upload accepts .json files only",
+        "Validates JSON structure against Zod schema",
+        "Shows clear error messages for invalid JSON",
+        "Displays parsed data preview after successful upload",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Resume Form - Personal Info Section",
+      "description": "As a user, I want to enter my personal information through a web form.",
+      "acceptanceCriteria": [
+        "Form fields for: name, email, phone, location, linkedin, website, summary",
+        "Email field validates email format",
+        "Required fields marked with asterisk",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Resume Form - Experience Section",
+      "description": "As a user, I want to add my work experience entries.",
+      "acceptanceCriteria": [
+        "Add/remove experience entries dynamically",
+        "Fields: title, company, location, startDate, endDate, current (checkbox), description, highlights (list)",
+        "When 'current' is checked, endDate is disabled",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Resume Form - Education Section",
+      "description": "As a user, I want to add my education entries.",
+      "acceptanceCriteria": [
+        "Add/remove education entries dynamically",
+        "Fields: degree, institution, location, graduationDate, gpa (optional)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Resume Form - Skills Section",
+      "description": "As a user, I want to add my skills with proficiency levels.",
+      "acceptanceCriteria": [
+        "Add/remove skills dynamically",
+        "Each skill has name and proficiency level dropdown (beginner/intermediate/advanced/expert)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Resume Form - Languages, Certifications, Projects, Open Source",
+      "description": "As a user, I want to add my languages, certifications, projects, and open source contributions.",
+      "acceptanceCriteria": [
+        "Languages section: name, proficiency (basic/conversational/professional/native)",
+        "Certifications section: name, issuer, date, url (optional)",
+        "Projects section: name, description, url, technologies list, highlights list",
+        "Open Source section: project, role (contributor/maintainer/creator), url, description, contributions list",
+        "All sections allow add/remove entries",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Form Validation and Step Navigation",
+      "description": "As a user, I want to navigate between form sections with validation.",
+      "acceptanceCriteria": [
+        "Step-by-step wizard with visible progress indicator",
+        "Next/Previous buttons to navigate between sections",
+        "Required fields validated before proceeding to next step",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Local Storage Persistence for Resume Data",
+      "description": "As a user, I want my form data saved automatically so I don't lose my work.",
+      "acceptanceCriteria": [
+        "Resume data auto-saves to localStorage on change",
+        "Data loads from localStorage on page load",
+        "Clear data button with confirmation dialog",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Export Resume Data as JSON",
+      "description": "As a user, I want to export my resume data as a JSON file.",
+      "acceptanceCriteria": [
+        "Export JSON button available after data entry",
+        "Downloads well-formatted JSON file",
+        "Filename includes user's name if available",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Job Description Input Page",
+      "description": "As a user, I want to paste a job description to analyze.",
+      "acceptanceCriteria": [
+        "Text area for pasting job description",
+        "Optional field for LinkedIn job URL",
+        "Character count indicator",
+        "Clear button",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "AI Provider Settings UI",
+      "description": "As a user, I want to configure my AI provider settings.",
+      "acceptanceCriteria": [
+        "Settings panel/dialog with AI provider selection",
+        "Provider options: OpenRouter, OpenAI, Anthropic, Ollama, Browser AI",
+        "API key input field for each provider (except Browser AI)",
+        "Keys stored in localStorage with security warning shown",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "AI Connection Test",
+      "description": "As a user, I want to test my AI provider connection before using it.",
+      "acceptanceCriteria": [
+        "Test connection button in settings",
+        "Shows loading state during test",
+        "Shows success/failure result",
+        "Displays error message on failure",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Job Requirements Parser",
+      "description": "As a developer, I need to parse job descriptions and extract key requirements.",
+      "acceptanceCriteria": [
+        "Create service to extract: required skills, qualifications, experience years, responsibilities",
+        "Use AI to analyze job description text",
+        "Return structured job requirements object",
+        "Handle AI provider errors gracefully",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Job Requirements Display",
+      "description": "As a user, I want to see the parsed job requirements summary.",
+      "acceptanceCriteria": [
+        "Display parsed requirements in organized sections",
+        "Show: required skills, qualifications, experience, key responsibilities",
+        "Loading state while AI is parsing",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Resume Tailoring Service",
+      "description": "As a developer, I need an AI service to generate tailored resume suggestions.",
+      "acceptanceCriteria": [
+        "Service takes resume data and job requirements as input",
+        "Generates reworded bullet points to highlight relevant experience",
+        "Identifies matching skills between resume and job",
+        "Calculates match score/percentage",
+        "Does NOT fabricate experience (prompt explicitly prevents this)",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Tailored Resume Preview",
+      "description": "As a user, I want to see my tailored resume with AI suggestions highlighted.",
+      "acceptanceCriteria": [
+        "Display resume with AI suggestions inline",
+        "Different styling for AI suggestions vs original content",
+        "Show match score prominently",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Accept/Reject AI Suggestions",
+      "description": "As a user, I want to accept or reject individual AI suggestions.",
+      "acceptanceCriteria": [
+        "Each AI suggestion has accept/reject buttons",
+        "Accepting a suggestion replaces original content",
+        "Rejecting removes the suggestion",
+        "Can undo accept/reject actions",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Side-by-Side Resume Comparison",
+      "description": "As a user, I want to see my original and tailored resume side by side.",
+      "acceptanceCriteria": [
+        "Split view showing original (left) and tailored (right)",
+        "Synced scrolling between panels",
+        "Toggle to show only tailored or only original",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Manual Resume Editing",
+      "description": "As a user, I want to manually edit any section of my tailored resume.",
+      "acceptanceCriteria": [
+        "Click to edit any text section",
+        "Inline editing with save/cancel",
+        "Changes reflect immediately in preview",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "PDF Resume Export",
+      "description": "As a user, I want to download my tailored resume as a PDF.",
+      "acceptanceCriteria": [
+        "Download PDF button",
+        "Uses @react-pdf/renderer for client-side generation",
+        "Clean, professional resume template",
+        "Filename includes job title or company name",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 22,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "DOCX Resume Export",
+      "description": "As a user, I want to download my tailored resume as a Word document.",
+      "acceptanceCriteria": [
+        "Download DOCX button",
+        "Uses docx.js for client-side generation",
+        "Matches PDF template formatting",
+        "Filename includes job title or company name",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 23,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Job History Storage",
+      "description": "As a user, I want my recent job analyses saved locally.",
+      "acceptanceCriteria": [
+        "Save last 10 job descriptions/analyses to localStorage",
+        "List of recent jobs in sidebar or dropdown",
+        "Can select previous job to re-use analysis",
+        "Delete individual job history entries",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Offline Support",
+      "description": "As a user, I want the app to work offline after initial load.",
+      "acceptanceCriteria": [
+        "Service worker caches static assets",
+        "App loads when offline (after first visit)",
+        "Show offline indicator when no network",
+        "Note: AI features require network except browser AI",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Database Setup with Drizzle and SQLite",
+      "description": "As a developer, I need a database configured for the application.",
+      "acceptanceCriteria": [
+        "Install drizzle-orm and drizzle-kit",
+        "Install better-sqlite3 driver",
+        "Create drizzle.config.ts with SQLite configuration",
+        "Create db/index.ts with database connection",
+        "Add db:generate and db:migrate scripts to package.json",
+        "Typecheck passes"
+      ],
+      "priority": 26,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Auth Schema with Drizzle",
+      "description": "As a developer, I need database tables for user authentication.",
+      "acceptanceCriteria": [
+        "Create db/schema.ts with Drizzle table definitions",
+        "Add users table: id, email, name, emailVerified, image, createdAt, updatedAt",
+        "Add sessions table: id, userId, expiresAt, token, createdAt, updatedAt",
+        "Add accounts table for OAuth: id, userId, provider, providerAccountId, etc.",
+        "Add user_resumes table: id, userId, resumeData (JSON), createdAt, updatedAt",
+        "Run migration successfully",
+        "Typecheck passes"
+      ],
+      "priority": 27,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Better Auth Configuration",
+      "description": "As a developer, I need Better Auth configured for authentication.",
+      "acceptanceCriteria": [
+        "Install better-auth package",
+        "Create lib/auth.ts with Better Auth server configuration",
+        "Configure email+password authentication",
+        "Configure Drizzle adapter for database",
+        "Create lib/auth-client.ts with Better Auth client",
+        "Add auth API route handler in routes/api.auth.$.tsx",
+        "Typecheck passes"
+      ],
+      "priority": 28,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Auth UI - Login and Signup Pages",
+      "description": "As a user, I want to sign up and log in to save my data across devices.",
+      "acceptanceCriteria": [
+        "Create /login route with email and password form",
+        "Create /signup route with email, password, and name fields",
+        "Use Better Auth client signIn and signUp methods",
+        "Form validation with Zod and error messages",
+        "Loading state during submission",
+        "Redirect to /resume on successful auth",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 29,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Auth Session Hook and Context",
+      "description": "As a developer, I need a React hook to access auth session state.",
+      "acceptanceCriteria": [
+        "Create useSession hook using Better Auth client",
+        "Hook returns: user, session, isLoading, isAuthenticated",
+        "Session state available throughout the app",
+        "Typecheck passes"
+      ],
+      "priority": 30,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Auth Header Integration",
+      "description": "As a user, I want to see login/signup buttons or my account info in the header.",
+      "acceptanceCriteria": [
+        "Show Login/Sign Up buttons when not authenticated",
+        "Show user name/email and Logout button when authenticated",
+        "User dropdown menu with Sign Out option",
+        "Use useSession hook for auth state",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 31,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Resume Data Cloud Sync",
+      "description": "As an authenticated user, I want my resume data synced to my account.",
+      "acceptanceCriteria": [
+        "Create server action to save resume data to user_resumes table",
+        "Create server action to load resume data for authenticated user",
+        "On login: load resume from database, merge with localStorage if newer",
+        "On save: persist to database for authenticated users, localStorage for guests",
+        "Show sync indicator in UI when saving to cloud",
+        "App continues to work fully without login (localStorage only)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 32,
+      "passes": true,
+      "notes": ""
+    }
+  ]
 }

@@ -21,11 +21,11 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] File upload accepts .json files
-- [ ] Validates JSON structure against expected schema
-- [ ] Shows clear error messages for invalid JSON
-- [ ] Displays parsed data preview after upload
-- [ ] Typecheck passes
+- [x] File upload accepts .json files
+- [x] Validates JSON structure against expected schema
+- [x] Shows clear error messages for invalid JSON
+- [x] Displays parsed data preview after upload
+- [x] Typecheck passes
 
 ### US-002: Web Form Resume Input
 
@@ -33,12 +33,12 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] Form sections: Personal Info, Experience, Education, Skills, Languages, Certifications, Projects, Open Source
-- [ ] Experience section allows adding multiple entries with: title, company, dates, description
-- [ ] Skills section supports adding/removing individual skills with proficiency level
-- [ ] Form validates required fields before proceeding
-- [ ] Can save form data to local storage as draft
-- [ ] Typecheck passes
+- [x] Form sections: Personal Info, Experience, Education, Skills, Languages, Certifications, Projects, Open Source
+- [x] Experience section allows adding multiple entries with: title, company, dates, description
+- [x] Skills section supports adding/removing individual skills with proficiency level
+- [x] Form validates required fields before proceeding
+- [x] Can save form data to local storage as draft
+- [x] Typecheck passes
 - [ ] Verify in browser using dev-browser skill
 
 ### US-003: Export Resume Data as JSON
@@ -47,10 +47,10 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] "Export JSON" button available after data entry
-- [ ] Downloads well-formatted JSON file
-- [ ] Exported JSON can be re-imported successfully
-- [ ] Typecheck passes
+- [x] "Export JSON" button available after data entry
+- [x] Downloads well-formatted JSON file
+- [x] Exported JSON can be re-imported successfully
+- [x] Typecheck passes
 
 ### US-004: Job Description Input
 
@@ -58,11 +58,11 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] Text area accepts pasted job description
-- [ ] Optional field for LinkedIn job URL
-- [ ] Extracts key requirements, skills, and qualifications from description
-- [ ] Shows parsed job requirements summary
-- [ ] Typecheck passes
+- [x] Text area accepts pasted job description
+- [x] Optional field for LinkedIn job URL
+- [x] Extracts key requirements, skills, and qualifications from description
+- [x] Shows parsed job requirements summary
+- [x] Typecheck passes
 - [ ] Verify in browser using dev-browser skill
 
 ### US-005: AI Provider Configuration
@@ -71,15 +71,15 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] Settings panel with AI provider options
-- [ ] Option 1: OpenRouter (access to multiple models with one key)
-- [ ] Option 2: OpenAI (requires user API key)
-- [ ] Option 3: Anthropic Claude (requires user API key)
-- [ ] Option 4: Browser-based AI (WebLLM/Transformers.js) - no key needed
-- [ ] Option 5: Ollama (local, requires Ollama running)
-- [ ] API keys stored in local storage (with clear warning)
-- [ ] Test connection button to verify API key works
-- [ ] Typecheck passes
+- [x] Settings panel with AI provider options
+- [x] Option 1: OpenRouter (access to multiple models with one key)
+- [x] Option 2: OpenAI (requires user API key)
+- [x] Option 3: Anthropic Claude (requires user API key)
+- [x] Option 4: Browser-based AI (WebLLM/Transformers.js) - no key needed
+- [x] Option 5: Ollama (local, requires Ollama running)
+- [x] API keys stored in local storage (with clear warning)
+- [x] Test connection button to verify API key works
+- [x] Typecheck passes
 - [ ] Verify in browser using dev-browser skill
 
 ### US-006: Resume Tailoring Engine
@@ -88,13 +88,13 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] AI identifies matching skills/experience between resume and job
-- [ ] AI suggests reworded bullet points to highlight relevant experience
-- [ ] AI recommends skills to emphasize based on job requirements
-- [ ] Shows match score/percentage
-- [ ] Clearly marks AI suggestions vs original content
-- [ ] Does NOT fabricate experience (only rewords/emphasizes existing)
-- [ ] Typecheck passes
+- [x] AI identifies matching skills/experience between resume and job
+- [x] AI suggests reworded bullet points to highlight relevant experience
+- [x] AI recommends skills to emphasize based on job requirements
+- [x] Shows match score/percentage
+- [x] Clearly marks AI suggestions vs original content
+- [x] Does NOT fabricate experience (only rewords/emphasizes existing)
+- [x] Typecheck passes
 
 ### US-007: Resume Preview and Edit
 
@@ -102,11 +102,11 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] Side-by-side view: original vs tailored resume
-- [ ] Accept/reject individual AI suggestions
-- [ ] Manual edit capability for any section
-- [ ] Real-time preview updates
-- [ ] Typecheck passes
+- [x] Side-by-side view: original vs tailored resume
+- [x] Accept/reject individual AI suggestions
+- [x] Manual edit capability for any section
+- [x] Real-time preview updates
+- [x] Typecheck passes
 - [ ] Verify in browser using dev-browser skill
 
 ### US-008: Resume Export as PDF/DOCX
@@ -115,11 +115,11 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] "Download PDF" button generates formatted PDF
-- [ ] "Download DOCX" button generates Word document
-- [ ] Clean, professional resume template
-- [ ] Filename includes job title or company name
-- [ ] Typecheck passes
+- [x] "Download PDF" button generates formatted PDF
+- [x] "Download DOCX" button generates Word document
+- [x] Clean, professional resume template
+- [x] Filename includes job title or company name
+- [x] Typecheck passes
 
 ### US-009: Local Storage Persistence
 
@@ -127,11 +127,11 @@ A web application that helps job seekers tailor their resumes to specific Linked
 
 **Acceptance Criteria:**
 
-- [ ] Resume data persists in localStorage
-- [ ] Job history (last 10 jobs) saved locally
-- [ ] Clear data option available
-- [ ] Works fully offline after initial load
-- [ ] Typecheck passes
+- [x] Resume data persists in localStorage
+- [x] Job history (last 10 jobs) saved locally
+- [x] Clear data option available
+- [x] Works fully offline after initial load
+- [x] Typecheck passes
 
 ### US-010: Optional User Account
 
@@ -142,8 +142,8 @@ A web application that helps job seekers tailor their resumes to specific Linked
 - [ ] "Sign up" / "Login" options (not required)
 - [ ] Simple email/password or OAuth (Google)
 - [ ] Syncs resume data to account when logged in
-- [ ] App works fully without login
-- [ ] Typecheck passes
+- [x] App works fully without login
+- [x] Typecheck passes
 - [ ] Verify in browser using dev-browser skill
 
 ## Functional Requirements

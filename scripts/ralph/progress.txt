@@ -1,3 +1,654 @@
-# Ralph Progress Log
-Started: Mon Jan 12 12:31:02 +08 2026
+## Codebase Patterns
+- PDF export: Use @react-pdf/renderer with pdf(<Component />).toBlob() for client-side generation
+- DOCX export: Use docx library with Packer.toBlob(doc) for client-side Word document generation
+- Using React Router v7 (Remix v2 upstreamed) in SPA mode
+- AI API calls: Use provider-specific functions with consistent ChatMessage interface ({role, content})
+- Anthropic API requires separate system param, not messages array; include anthropic-dangerous-direct-browser-access header
+- Parse AI responses: strip markdown code blocks, extract JSON substring, validate with Zod schema
+- shadcn/ui with Tailwind CSS v4 for components
+- Theme provider pattern for dark/light mode toggle
+- Path alias `~/*` maps to `./app/*`
+- Resume types and schemas are in `app/lib/types.ts` - use Zod for validation
+- All array items (experience, skills, etc.) use `id: string` generated via `generateId()` for React keys
+- Component organization: `app/components/resume/` for resume-related components
+- Custom hooks go in `app/hooks/` directory
+- Use shadcn's Alert component with variant="destructive" for error states
+- Form sections pattern: Each section (PersonalInfoForm, ExperienceForm, etc.) takes `initialData` and `onChange(data, isValid)` props
+- Array form validation: Use `${index}.${field}` key pattern for touched/errors state tracking
+- localStorage persistence: Use custom hook with isLoaded flag to prevent saving empty state on initial render
+- AI settings stored in localStorage via useAISettings hook - same pattern as resume storage
+- Inline editing: Use EditableText component with `value`, `onSave`, `multiline`, `placeholder` props
+- PWA/Offline: Use vite-plugin-pwa with registerType: "autoUpdate", useNetworkStatus hook for offline detection
+- Cloud sync: API routes at /api/resume for authenticated users, debounced sync with localStorage fallback
+
+---
+
+# Progress Log
+
+## 2026-01-12 - US-001
+Thread: https://ampcode.com/threads/T-019bb07d-29be-725c-8216-5bc29244ed11
+- Initialized React Router v7 project in SPA mode
+- Configured Tailwind CSS v4 and shadcn/ui
+- Created layout with header and theme toggle (dark/light mode)
+- Created landing page with feature overview
+- Files changed:
+  - app/root.tsx (main layout with ThemeProvider)
+  - app/components/theme-provider.tsx
+  - app/components/theme-toggle.tsx
+  - app/components/layout/header.tsx
+  - app/routes/home.tsx
+  - react-router.config.ts (ssr: false for SPA mode)
+- **Learnings for future iterations:**
+  - Remix v2 is now React Router v7 - use `npx create-react-router@latest`
+  - shadcn/ui init works automatically with Tailwind v4
+  - The template includes some welcome files that can be cleaned up later
+---
+
+## 2026-01-12 - US-002
+Thread: https://ampcode.com/threads/T-019bb082-6397-705f-813b-9392f587e298
+- Created comprehensive TypeScript types and Zod schemas for resume data
+- Schemas include: PersonalInfo, Experience, Education, Skills, Languages, Certifications, Projects, OpenSource
+- Added proficiency enums for skills (beginner/intermediate/advanced/expert) and languages (basic/conversational/professional/native)
+- Added open source role enum (contributor/maintainer/creator)
+- Included helper `emptyResume` constant and `generateId()` function
+- Files changed:
+  - app/lib/types.ts (new file with all resume types and schemas)
+  - package.json (added zod dependency)
+- **Learnings for future iterations:**
+  - Use `.or(z.literal(""))` for optional URL fields to allow empty strings
+  - Each array item schema includes `id: string` for React key management
+  - Export both schema and inferred type for each entity (e.g., `experienceSchema` and `Experience`)
+---
+
+## 2026-01-12 - US-003
+Thread: https://ampcode.com/threads/T-019bb084-0f89-70cf-ae1d-c67a703043bd
+- Implemented JSON Resume Upload Component with drag-and-drop support
+- Created ResumePreview component to display parsed resume data
+- Added validation with Zod schema and clear error messages
+- Added shadcn/ui components: Card, Alert, Badge, Separator
+- Created /resume route for the upload page
+- Files changed:
+  - app/components/resume/json-upload.tsx (new - file upload component)
+  - app/components/resume/resume-preview.tsx (new - resume preview component)
+  - app/components/ui/alert.tsx, badge.tsx, card.tsx, separator.tsx (shadcn/ui)
+  - app/routes/resume.tsx (new - resume page route)
+  - app/routes.ts (added resume route)
+  - tasks/sample-resume.json (test data)
+- **Learnings for future iterations:**
+  - Use FileReader API for client-side JSON parsing
+  - Zod safeParse returns structured errors in result.error.issues
+  - Hidden file input with label for custom file upload UI
+  - Use `accept=".json"` on input but also validate file extension in handler
+---
+
+## 2026-01-12 - US-004
+Thread: https://ampcode.com/threads/T-019bb089-7eda-77ef-9fab-0c71fe6218d8
+- Created PersonalInfoForm component with all personal info fields
+- Email validation using Zod schema with real-time error display
+- Required fields (name, email) marked with red asterisks
+- Integrated form into resume page with tabs (Form / Upload JSON)
+- Added shadcn/ui components: Input, Label, Textarea, Tabs
+- Files changed:
+  - app/components/resume/personal-info-form.tsx (new)
+  - app/components/ui/input.tsx, label.tsx, textarea.tsx, tabs.tsx (shadcn/ui)
+  - app/routes/resume.tsx (updated with tabs and form)
+- **Learnings for future iterations:**
+  - Use `touched` state pattern to only show errors after field is blurred
+  - Use `useCallback` for onChange handlers passed to child components to prevent infinite re-renders
+  - shadcn/ui Tabs component works well for switching between form and upload views
+---
+
+## 2026-01-12 - US-005
+Thread: https://ampcode.com/threads/T-019bb08c-d330-734b-98ba-5b218a9eb57f
+- Created ExperienceForm component with dynamic add/remove experience entries
+- Added all required fields: title, company, location, startDate, endDate, current checkbox, description, highlights
+- Implemented "current" checkbox that disables endDate field when checked
+- Added highlights as a dynamic list with add/remove functionality (Enter key or button)
+- Integrated into resume page below Personal Information section
+- Added shadcn/ui Checkbox component
+- Files changed:
+  - app/components/resume/experience-form.tsx (new)
+  - app/components/ui/checkbox.tsx (shadcn/ui)
+  - app/routes/resume.tsx (updated with experience form integration)
+- **Learnings for future iterations:**
+  - Use nested key pattern like `${index}.${field}` for touched/errors state in array forms
+  - Input type="month" provides native month picker for date fields
+  - When removing items from array, need to re-index touched/errors state keys
+  - Pattern: Each form section should have its own validity state, combine with `&&` for overall form validity
+---
+
+## 2026-01-12 - US-006
+Thread: https://ampcode.com/threads/T-019bb091-4896-714f-8fc5-79492254576d
+- Created EducationForm component with dynamic add/remove education entries
+- Fields: degree (required), institution (required), location, graduationDate, gpa (optional)
+- Used same pattern as ExperienceForm with EducationEntry sub-component
+- Integrated into resume page below Work Experience section
+- Files changed:
+  - app/components/resume/education-form.tsx (new)
+  - app/routes/resume.tsx (added EducationForm integration)
+- **Learnings for future iterations:**
+  - Education form is simpler than Experience - no highlights array, no "current" checkbox
+  - Same validation pattern: `${index}.${field}` keys for touched/errors state
+  - GPA field is optional so no validation required
+---
+
+## 2026-01-12 - US-007
+Thread: https://ampcode.com/threads/T-019bb095-49ac-7207-8407-096c0e3d3b59
+- Created SkillsForm component with dynamic add/remove skill entries
+- Fields: name (required), proficiency dropdown (beginner/intermediate/advanced/expert)
+- Used shadcn/ui Select component for proficiency dropdown
+- Integrated into resume page below Education section
+- Files changed:
+  - app/components/resume/skills-form.tsx (new)
+  - app/components/ui/select.tsx (shadcn/ui)
+  - app/routes/resume.tsx (added SkillsForm integration)
+- **Learnings for future iterations:**
+  - Skills form is simpler than Education - just name and proficiency dropdown
+  - Use shadcn/ui Select with SelectContent, SelectItem, SelectTrigger, SelectValue for dropdowns
+  - Create a proficiencyLabels mapping for displaying friendly labels in the dropdown
+---
+
+## 2026-01-12 - US-008
+Thread: https://ampcode.com/threads/T-019bb099-a79c-777d-86e6-aed343970853
+- Created LanguagesForm with name and proficiency dropdown (basic/conversational/professional/native)
+- Created CertificationsForm with name, issuer, date, and optional URL fields
+- Created ProjectsForm with name, description, URL, technologies list, and highlights list
+- Created OpenSourceForm with project name, role dropdown (contributor/maintainer/creator), URL, description, and contributions list
+- All sections support dynamic add/remove entries following established patterns
+- Integrated all four forms into the resume page below Skills section
+- Files changed:
+  - app/components/resume/languages-form.tsx (new)
+  - app/components/resume/certifications-form.tsx (new)
+  - app/components/resume/projects-form.tsx (new)
+  - app/components/resume/open-source-form.tsx (new)
+  - app/routes/resume.tsx (added all four form integrations)
+- **Learnings for future iterations:**
+  - Projects and OpenSource forms have nested dynamic lists (technologies, highlights, contributions) - use X button for inline removal
+  - Use Enter key handler in list inputs for quick addition
+  - Technologies are displayed as inline tags with remove buttons for better UX
+---
+
+## 2026-01-12 - US-009
+Thread: https://ampcode.com/threads/T-019bb0c0-bdc9-76e9-8125-4df6f10bb30d
+- Created FormWizard component with step-by-step navigation
+- Progress indicator with numbered circles, checkmarks for completed steps, and connector lines
+- Next/Previous navigation buttons with validation gating
+- Personal Info is required (can't proceed without it), all other sections marked as optional
+- Clicking on step indicators allows going back or forward (if valid)
+- Integrated FormWizard into resume page, replacing the previous vertical card layout
+- Widened container to max-w-3xl to accommodate 8 step indicators
+- Files changed:
+  - app/components/resume/form-wizard.tsx (new - reusable wizard component)
+  - app/routes/resume.tsx (refactored to use FormWizard)
+- **Learnings for future iterations:**
+  - FormWizard is generic and reusable - takes array of WizardStep objects with id, title, component, isValid, isOptional
+  - Use useMemo for wizardSteps array to prevent re-renders
+  - Step navigation: can always go back, can only proceed forward if current step is valid OR optional
+  - Progress indicator should be horizontal for good UX with many steps
+---
+
+## 2026-01-12 - US-010
+Thread: https://ampcode.com/threads/T-019bb0c3-a813-7200-b28c-58fc15348366
+- Created useResumeStorage custom hook for localStorage persistence
+- Hook validates stored data against Zod schema on load
+- Auto-saves resume data to localStorage on every change via updateResumeField
+- Added loading state to prevent flash of empty form while localStorage is loading
+- Added "Clear All Data" button with AlertDialog confirmation
+- Used shadcn/ui AlertDialog component with destructive styling for the confirm button
+- Files changed:
+  - app/hooks/use-resume-storage.ts (new - localStorage persistence hook)
+  - app/components/ui/alert-dialog.tsx (new - shadcn/ui AlertDialog)
+  - app/routes/resume.tsx (integrated storage hook and clear button)
+- **Learnings for future iterations:**
+  - Use isLoaded flag to prevent saving empty state on initial render
+  - Use isInitialLoad ref to track first mount and avoid writing default data back to localStorage
+  - Place hooks in app/hooks/ directory following project conventions
+  - AlertDialog is better than window.confirm for destructive actions - provides better UX
+---
+
+
+## 2026-01-12 - US-011
+Thread: https://ampcode.com/threads/T-019bb0c6-b3d8-72c7-ade3-dd60423f7d7c
+- Created exportResumeAsJson utility function in app/lib/export-json.ts
+- Downloads well-formatted JSON with 2-space indentation
+- Filename uses sanitized user name if available (e.g., "john-doe-resume.json"), falls back to "resume.json"
+- Added Export JSON button in the resume page header (next to Clear All Data)
+- Added Export JSON button in the resume success state (after upload/form completion)
+- Files changed:
+  - app/lib/export-json.ts (new - export utility)
+  - app/routes/resume.tsx (added export button and handler)
+- **Learnings for future iterations:**
+  - Use URL.createObjectURL + invisible anchor for file downloads
+  - Sanitize filenames by converting to lowercase and replacing non-alphanumeric chars with hyphens
+  - Always revoke object URL after download to prevent memory leaks
+---
+
+## 2026-01-12 - US-012
+Thread: https://ampcode.com/threads/T-019bb0c8-fe6a-70cd-9600-e437f450758d
+- Created Job Description Input Page at /job route
+- Text area with character count (0 / 10,000) for job description
+- Optional LinkedIn URL field with URL validation and LinkedIn-specific warning
+- Clear button that resets both fields
+- "Analyze Job" button (disabled until content is entered)
+- Added JobDescription type and schema to types.ts
+- Updated resume page to link to /job when resume is loaded
+- Files changed:
+  - app/lib/types.ts (added JobDescription schema and type)
+  - app/routes/job.tsx (new - job description input page)
+  - app/routes.ts (added job route)
+  - app/routes/resume.tsx (updated "Continue to Job Description" to link to /job)
+- **Learnings for future iterations:**
+  - Use MAX_DESCRIPTION_LENGTH constant for character limit with visual warning at 90%
+  - LinkedIn URL validation: check both URL format and that it contains "linkedin.com"
+  - Disable buttons when no content using hasContent check on trimmed description
+---
+
+## 2026-01-12 - US-013
+Thread: https://ampcode.com/threads/T-019bb0cb-b4e9-7089-88c4-a6f8d2bc5192
+- Created AI Provider Settings UI with Dialog component
+- Added AIProvider enum and AISettings schema/type to types.ts
+- Created useAISettings hook for localStorage persistence
+- Created AISettingsDialog component with:
+  - Provider dropdown (OpenRouter, OpenAI, Anthropic, Ollama, Browser AI)
+  - API key input with show/hide toggle for each provider (except Browser AI)
+  - Ollama Base URL field (only shown when Ollama is selected)
+  - Security warning about localStorage storage
+  - Browser AI info message (no API key required)
+- Integrated settings button in Header component
+- Files changed:
+  - app/lib/types.ts (added AI provider schemas and types)
+  - app/hooks/use-ai-settings.ts (new - localStorage persistence hook)
+  - app/components/ai-settings-dialog.tsx (new - settings dialog)
+  - app/components/ui/dialog.tsx (new - shadcn/ui Dialog component)
+  - app/components/layout/header.tsx (added settings button)
+- **Learnings for future iterations:**
+  - AI settings follow same localStorage pattern as resume storage hook
+  - Use Input type="password" with toggle button for API keys
+  - Browser AI doesn't need API key so conditionally render the input field
+  - Provider-specific options (like Ollama URL) can be shown conditionally based on selected provider
+---
+
+## 2026-01-12 - US-014
+Thread: https://ampcode.com/threads/T-019bb0d0-2533-741b-ac68-6c4b42db3dcb
+- Created testAIConnection utility function in app/lib/ai-connection.ts
+- Supports all providers: OpenRouter, OpenAI, Anthropic, Ollama, Browser AI
+- Each provider has specific API endpoint testing logic
+- Added "Test Connection" button to AI Settings Dialog
+- Shows loading state with spinner during test
+- Displays success (green alert) or failure (red alert) result with details
+- Resets test state when user changes provider or API key
+- Files changed:
+  - app/lib/ai-connection.ts (new - connection testing utility)
+  - app/components/ai-settings-dialog.tsx (updated with test button and status)
+- **Learnings for future iterations:**
+  - Anthropic requires `anthropic-dangerous-direct-browser-access: true` header for browser requests
+  - Ollama local server can be tested via /api/tags endpoint
+  - Browser AI check uses window.ai which is experimental/non-standard
+  - Use ConnectionTestResult interface for consistent response format across providers
+---
+
+## 2026-01-12 - US-015
+Thread: https://ampcode.com/threads/T-019bb0d3-62e1-75a8-84fe-1d0304f8fb15
+- Created Job Requirements Parser service to extract structured data from job descriptions
+- Added JobRequirements type and Zod schema to types.ts (title, company, requiredSkills, preferredSkills, qualifications, experienceYears, responsibilities, benefits, keywords)
+- Created parseJobDescription function supporting all AI providers (OpenRouter, OpenAI, Anthropic, Ollama, Browser AI)
+- AI prompt instructs model to return JSON-only response with specific structure
+- Response parsing handles markdown code blocks and validates with Zod
+- Files changed:
+  - app/lib/types.ts (added JobRequirements schema, type, empty constant, JobParserResult interface)
+  - app/lib/job-parser.ts (new - AI-powered job description parser)
+- **Learnings for future iterations:**
+  - Use SYSTEM_PROMPT to control AI output format strictly (request JSON-only)
+  - Provider-specific API call functions keep logic clean and testable
+  - Parse AI response by: 1) strip markdown, 2) extract JSON substring, 3) validate with Zod
+  - Anthropic uses separate `system` param while others use messages array
+  - Browser AI uses window.ai.languageModel.create() with systemPrompt option
+---
+
+## 2026-01-12 - US-016
+Thread: https://ampcode.com/threads/T-019bb0d5-cdef-775a-b563-060cc3ada185
+- Created JobRequirementsDisplay component to show parsed job requirements
+- Displays organized sections: title/company header, experience required, required skills (badges), preferred skills, qualifications, responsibilities, benefits, keywords
+- Uses lucide-react icons for visual enhancement (Briefcase, GraduationCap, Lightbulb, ListChecks, Clock, Gift, Tag, Building2)
+- Updated job.tsx to integrate AI parsing with loading state and error handling
+- Loading state shows spinner in button during analysis
+- Error state displays destructive Alert with error message
+- Fields are disabled during analysis to prevent edits
+- Files changed:
+  - app/components/job/job-requirements-display.tsx (new - requirements display component)
+  - app/routes/job.tsx (updated with parsing integration and loading state)
+- **Learnings for future iterations:**
+  - Job components go in app/components/job/ directory
+  - Use Badge variants: "default" for required, "secondary" for preferred, "outline" for keywords
+  - Error state resets when user modifies job description (clears requirements and error)
+  - Disable form fields during async operations to prevent race conditions
+---
+
+## 2026-01-12 - US-017
+Thread: https://ampcode.com/threads/T-019bb0da-613d-7444-a516-39b1308d1efd
+- Created Resume Tailoring Service (`app/lib/resume-tailor.ts`) for AI-powered suggestions
+- Added TailoringResult types including: Suggestion, SkillMatch, matchScore, strengths, improvementAreas
+- Service takes Resume and JobRequirements as input, returns structured suggestions
+- Supports all AI providers (OpenRouter, OpenAI, Anthropic, Ollama, Browser AI)
+- System prompt explicitly prevents fabricating experience - only rewords existing content
+- Returns match percentage, matched/missing skills, and specific content suggestions
+- Each suggestion includes: sectionType, itemId, field, originalContent, suggestedContent, reason, status
+- Files changed:
+  - app/lib/types.ts (added Suggestion, SkillMatch, TailoringResult schemas and types)
+  - app/lib/resume-tailor.ts (new - AI-powered resume tailoring service)
+- **Learnings for future iterations:**
+  - Resume tailoring follows same AI call pattern as job-parser.ts
+  - Use max_tokens: 4000 for tailoring (more complex output than job parsing)
+  - Suggestions need unique IDs for React keys - generate if AI doesn't provide
+  - Include "status" field for tracking accept/reject in UI (pending/accepted/rejected)
+---
+
+## 2026-01-12 - US-018
+Thread: https://ampcode.com/threads/T-019bb0dc-ad94-77b9-9e81-05168783c17f
+- Created TailoredResumePreview component with inline AI suggestions
+- Prominent match score display with color-coded visual indicator (0-100%)
+- Matched/missing skills sections with badges and icons
+- Strengths and improvement areas sections
+- Suggestions displayed inline with original content (strikethrough) and suggested content (highlighted with Sparkles icon)
+- Skills in resume highlighted as matched when they appear in job requirements
+- Integrated tailoring workflow into job route with "Tailor My Resume" button
+- Resume loaded from localStorage using useResumeStorage hook
+- Files changed:
+  - app/components/resume/tailored-resume-preview.tsx (new - tailored preview component)
+  - app/routes/job.tsx (updated with tailoring integration)
+- **Learnings for future iterations:**
+  - Use cn() utility from lib/utils for conditional class merging
+  - Match score visualization uses nested divs with bg-* for ring effect
+  - Suggestions use getSuggestionsForSection helper to filter by sectionType, itemId, field
+  - When tailoring, disable all form inputs to prevent edits during async operation
+---
+
+## 2026-01-12 - US-019
+Thread: https://ampcode.com/threads/T-019bb0e4-895c-70ce-9a82-bc71e9b476a6
+- Added accept/reject buttons to each AI suggestion in TailoredResumePreview component
+- Implemented accept logic: applySuggestionToResume() updates resume and persists to localStorage
+- Implemented reject logic: updates suggestion status to "rejected" (hides from view)
+- Added undo capability: reverts both suggestion status and resume content (if accepted)
+- Added status badges showing pending/accepted counts in suggestion card header
+- Created apply-suggestion.ts utility for applying/reverting suggestions across all resume sections
+- Files changed:
+  - app/components/resume/tailored-resume-preview.tsx (added accept/reject/undo buttons with status handling)
+  - app/lib/apply-suggestion.ts (new - utility for applying/reverting suggestions)
+  - app/routes/job.tsx (integrated suggestion handlers with resume storage)
+- **Learnings for future iterations:**
+  - Suggestion status tracking: use "pending" | "accepted" | "rejected" enum in suggestion object
+  - For undo of accepted suggestions, need to store originalContent to revert resume
+  - Use separate utility file (apply-suggestion.ts) for resume mutation logic to keep components clean
+  - Rejected suggestions return null from SuggestionInline to hide them from view
+---
+
+## 2026-01-12 - US-020
+Thread: https://ampcode.com/threads/T-019bb0ea-369c-731b-88f5-7ed84f8b3050
+- Created ResumeComparisonView component with side-by-side comparison
+- Split view showing original resume (left) and tailored resume with suggestions (right)
+- Implemented synced scrolling between panels using scroll percentage calculations
+- Added view mode toggle: Split / Original / Tailored with button group
+- Displays match score in header
+- Reuses SuggestionInline component for accept/reject/undo functionality
+- ResumePanel sub-component handles rendering resume sections with conditional suggestions
+- Integrated into job.tsx below the TailoredResumePreview component
+- Files changed:
+  - app/components/resume/resume-comparison-view.tsx (new - side-by-side comparison)
+  - app/routes/job.tsx (integrated comparison view)
+- **Learnings for future iterations:**
+  - Use refs and scroll event listeners for synced scrolling between panels
+  - Calculate scroll percentage for proportional sync: (scrollTop / (scrollHeight - clientHeight))
+  - Use requestAnimationFrame + isSyncing ref to prevent infinite scroll loops
+  - View mode toggle can be implemented with button group using conditional variant styling
+  - Extract ResumePanel into a reusable sub-component for both original and tailored views
+---
+
+## 2026-01-12 - US-021
+Thread: https://ampcode.com/threads/T-019bb0ed-a529-755a-8b87-919de29ec640
+- Created EditableText component for inline click-to-edit functionality
+- Component supports single-line (Input) and multiline (Textarea) modes
+- Save with Enter (single-line) or Ctrl/Cmd+Enter (multiline), cancel with Escape
+- Shows pencil icon on hover to indicate editable fields
+- Updated ResumeComparisonView to integrate inline editing in tailored resume panel
+- Added onEditField callback prop and EditFieldParams interface (exported for reuse)
+- Made personal info (name, summary), experience (title, company, description, highlights), projects (name, description), and open source (project, description) editable
+- Created handleEditField in job.tsx to update resume fields and persist to localStorage
+- Files changed:
+  - app/components/resume/editable-text.tsx (new - inline edit component)
+  - app/components/resume/resume-comparison-view.tsx (integrated EditableText, added onEditField prop)
+  - app/routes/job.tsx (added handleEditField and passed to ResumeComparisonView)
+- **Learnings for future iterations:**
+  - EditableText component pattern: value prop for controlled input, onSave callback for persistence
+  - Use `canEdit = !isOriginal && !!onEditField` to conditionally enable editing only in tailored view
+  - For highlights/array items, use highlightIndex parameter to update specific items
+  - EditFieldParams interface exported for type-safety across components
+---
+
+## 2026-01-12 - US-022
+Thread: https://ampcode.com/threads/T-019bb0f3-935d-70f9-b020-7cd0fd7014e9
+- Created PDF export functionality using @react-pdf/renderer
+- Created professional resume template with all sections (personal info, experience, education, skills, languages, certifications, projects, open source)
+- Added Download PDF button to job page in an export card above tailored preview
+- Filename includes user name plus job title or company name from parsed requirements
+- Added loading state with spinner during PDF generation
+- Files changed:
+  - app/lib/export-pdf.tsx (new - PDF template and export utility)
+  - app/routes/job.tsx (added PDF export button and handler)
+  - package.json (added @react-pdf/renderer dependency)
+- **Learnings for future iterations:**
+  - @react-pdf/renderer uses its own StyleSheet.create() syntax similar to React Native
+  - Use pdf(<Component />).toBlob() for client-side PDF generation
+  - PDF fonts: use standard Helvetica, Helvetica-Bold for cross-platform compatibility
+  - Link component from @react-pdf/renderer for clickable URLs in PDF
+---
+
+## 2026-01-12 - US-023
+Thread: https://ampcode.com/threads/T-019bb0f7-5646-751d-810e-8a6f9bbe8105
+- Created DOCX export functionality using docx library
+- Created professional resume template matching PDF format (header, experience, education, skills, languages, certifications, projects, open source)
+- Added Download DOCX button next to PDF button in job page export card
+- Filename includes user name plus job title or company name from parsed requirements
+- Added loading state with spinner during DOCX generation
+- Files changed:
+  - app/lib/export-docx.ts (new - DOCX template and export utility)
+  - app/routes/job.tsx (added DOCX export button and handler)
+  - package.json (added docx and file-saver dependencies)
+- **Learnings for future iterations:**
+  - docx library uses Document/Paragraph/TextRun structure for building documents
+  - Use Packer.toBlob(doc) for client-side DOCX generation
+  - ExternalHyperlink component for clickable URLs in DOCX
+  - Use convertInchesToTwip() for margin/spacing measurements
+  - Tab stops with AlignmentType.RIGHT for right-aligned date text
+---
+
+## 2026-01-12 - US-024
+Thread: https://ampcode.com/threads/T-019bb0fb-00e1-7375-8861-8558f38d6a94
+- Created Job History Storage feature to save last 10 job analyses to localStorage
+- Added JobHistoryEntry type and schema to types.ts with id, createdAt, jobDescription, requirements
+- Created useJobHistory hook following same pattern as useResumeStorage (with isLoaded flag, isInitialLoad ref)
+- Created JobHistoryPanel component with collapsible UI showing job title, company, date, and LinkedIn link
+- Integrated history into job page: auto-saves after successful analysis, can select previous job to load, delete individual entries
+- Files changed:
+  - app/lib/types.ts (added JobHistoryEntry schema, JobHistory type, MAX_JOB_HISTORY_ENTRIES constant)
+  - app/hooks/use-job-history.ts (new - localStorage persistence hook)
+  - app/components/job/job-history-panel.tsx (new - collapsible history panel)
+  - app/routes/job.tsx (integrated history with addEntry, handleSelectFromHistory, handleDeleteFromHistory)
+- **Learnings for future iterations:**
+  - Job history uses same localStorage pattern as resume/AI settings - useRef for initial load, isLoaded flag to prevent empty writes
+  - getEntryTitle helper extracts title from requirements or first line of description
+  - AlertDialog for delete confirmation follows same pattern as Clear All Data button
+  - Collapsible panel with isExpanded state keeps UI clean when many entries exist
+---
+
+## 2026-01-12 - US-025
+Thread: https://ampcode.com/threads/T-019bb0fe-5444-748b-af2b-40c14a4c810a
+- Implemented offline support with service worker using vite-plugin-pwa
+- Configured PWA manifest with app name, theme color, and icons
+- Service worker precaches all static assets (JS, CSS, HTML, fonts)
+- Added runtime caching for Google Fonts (CacheFirst strategy with 1 year expiration)
+- Created useNetworkStatus hook to detect online/offline state
+- Created OfflineIndicator component that shows amber toast when offline
+- Added PWA types to tsconfig.json for TypeScript support
+- Files changed:
+  - vite.config.ts (added VitePWA plugin configuration)
+  - tsconfig.json (added vite-plugin-pwa/client types)
+  - app/hooks/use-network-status.ts (new - network status hook)
+  - app/components/offline-indicator.tsx (new - offline indicator component)
+  - app/root.tsx (added OfflineIndicator to layout)
+  - package.json (added vite-plugin-pwa dependency)
+- **Learnings for future iterations:**
+  - vite-plugin-pwa with registerType: "autoUpdate" auto-updates service worker without prompt
+  - Use globPatterns to include all static asset types in precache
+  - runtimeCaching with CacheFirst is best for fonts that rarely change
+  - useNetworkStatus hook listens to window online/offline events
+  - Offline indicator should mention AI features require network (except Browser AI)
+---
+
+## 2026-01-12 - US-026
+Thread: https://ampcode.com/threads/T-019bb131-36a3-77ae-89c9-550c9dae319d
+- Set up Drizzle ORM with SQLite database using better-sqlite3 driver
+- Created drizzle.config.ts with SQLite configuration pointing to ./data/sqlite.db
+- Created app/db/schema.ts with placeholder users table (to be extended in US-027)
+- Created app/db/index.ts with database connection export
+- Added db:generate and db:migrate scripts to package.json
+- Added /data/ to .gitignore for local database files
+- Files changed:
+  - drizzle.config.ts (new)
+  - app/db/schema.ts (new - placeholder schema)
+  - app/db/index.ts (new - database connection)
+  - package.json (added scripts and dependencies)
+  - .gitignore (added /data/)
+- **Learnings for future iterations:**
+  - Drizzle config uses `dialect: "sqlite"` and `dbCredentials.url` for SQLite
+  - better-sqlite3 is synchronous and doesn't require async/await for basic operations
+  - Schema file exports tables, db/index.ts imports schema for type-safe queries
+  - Keep data/ folder for local SQLite files, add to gitignore
+---
+
+## 2026-01-12 - US-027
+Thread: https://ampcode.com/threads/T-019bb133-648e-75bd-9a7f-80ba2191e563
+- Created comprehensive auth schema with Drizzle ORM
+- Added users table: id, email, name, emailVerified, image, createdAt, updatedAt
+- Added sessions table: id, userId, expiresAt, token, createdAt, updatedAt with FK to users
+- Added accounts table for OAuth: id, userId, provider, providerAccountId, accessToken, refreshToken, scope, tokenType, idToken, timestamps
+- Added user_resumes table: id, userId, resumeData (JSON), createdAt, updatedAt with FK to users
+- Generated and ran migration successfully (0000_cool_madelyne_pryor.sql)
+- Exported TypeScript types for all tables (User, Session, Account, UserResume)
+- Files changed:
+  - app/db/schema.ts (extended with full auth schema)
+  - drizzle/0000_cool_madelyne_pryor.sql (new migration)
+  - drizzle/meta/*.json (migration metadata)
+- **Learnings for future iterations:**
+  - Use `text("column", { mode: "json" })` for JSON columns in SQLite
+  - Use `references(() => table.id, { onDelete: "cascade" })` for foreign keys
+  - Export both `$inferSelect` and `$inferInsert` types for each table
+  - Drizzle generates migrations in `drizzle/` folder with random names
+---
+
+## 2026-01-12 - US-028
+Thread: https://ampcode.com/threads/T-019bb134-e943-736b-a642-f045fef3fa8a
+- Installed better-auth package and configured authentication system
+- Created app/lib/auth.server.ts with Better Auth server configuration
+  - Configured Drizzle adapter for SQLite database
+  - Enabled email+password authentication with 8-character minimum password
+  - Set session expiry to 7 days with 24-hour update age
+- Created app/lib/auth-client.ts with Better Auth client utilities
+  - Exports authClient, signIn, signUp, signOut, useSession
+  - Uses window.location.origin for baseURL for portability
+- Created app/routes/api.auth.$.tsx as catch-all API route handler
+- Updated app/routes.ts with api/auth/* route
+- Files changed:
+  - app/lib/auth.server.ts (new - server auth config)
+  - app/lib/auth-client.ts (new - client auth utilities)
+  - app/routes/api.auth.$.tsx (new - API route handler)
+  - app/routes.ts (added auth route)
+  - package.json (added better-auth dependency)
+- **Learnings for future iterations:**
+  - Better Auth uses `.server.ts` suffix for server-only code in React Router
+  - Use drizzleAdapter with provider: "sqlite" for SQLite databases
+  - API route uses catch-all pattern `api/auth/*` in routes.ts, file named `api.auth.$.tsx`
+  - React Router v7 uses Route.LoaderArgs and Route.ActionArgs types from +types file
+  - Export signIn, signUp, signOut, useSession directly from auth-client for convenience
+---
+
+## 2026-01-12 - US-029
+Thread: https://ampcode.com/threads/T-019bb137-25bd-765d-a7ee-e570a19f7f70
+- Created /login route with email and password form
+- Created /signup route with email, password, name, and confirm password fields
+- Integrated Better Auth client signIn.email() and signUp.email() methods
+- Form validation with Zod schemas including password length (8+ chars) and email format
+- Loading state with Loader2 spinner during authentication
+- Redirects to /resume on successful auth using useNavigate()
+- Error handling for server errors and validation errors
+- Files changed:
+  - app/routes/login.tsx (new - login page)
+  - app/routes/signup.tsx (new - signup page)
+  - app/routes.ts (added login and signup routes)
+- **Learnings for future iterations:**
+  - Use signIn.email() and signUp.email() from Better Auth client for email+password auth
+  - Better Auth returns { error } in response, check response.error for auth failures
+  - For password confirmation, use Zod .refine() with custom path for error location
+  - Pattern: validate fields on blur and on submit, track touched state for UX
+---
+
+## 2026-01-12 - US-030
+Thread: https://ampcode.com/threads/T-019bb13a-6947-7111-a24c-9e77f7de2f3c
+- Created useSession hook wrapping Better Auth's useSession
+- Hook returns: user, session, isLoading, isAuthenticated, error, refetch
+- Exported SessionUser and Session types for type-safe usage
+- Files changed:
+  - app/hooks/use-session.ts (new - session hook wrapper)
+- **Learnings for future iterations:**
+  - Better Auth useSession returns { data, isPending, error, refetch }
+  - data contains { user, session } objects
+  - Wrapper hook provides more convenient properties: isLoading (alias isPending), isAuthenticated (!!data?.user)
+  - Export helper types for components that need user/session shapes
+---
+
+## 2026-01-12 - US-031
+Thread: https://ampcode.com/threads/T-019bb13c-5180-7401-bf80-27f214fc530a
+- Added auth header integration to show Login/Sign Up buttons or user dropdown
+- Updated Header component to use useSession hook for auth state
+- When not authenticated: shows Login (ghost button) and Sign Up (primary button) links
+- When authenticated: shows user dropdown with name/email, truncated to 120px max width
+- Dropdown menu with user info section and Sign Out option with loading state
+- Added shadcn/ui DropdownMenu component for the user menu
+- Files changed:
+  - app/components/layout/header.tsx (updated with auth integration)
+  - app/components/ui/dropdown-menu.tsx (new - shadcn/ui component)
+- **Learnings for future iterations:**
+  - Use DropdownMenuLabel for displaying user info in dropdown header
+  - Add max-w and truncate classes for long user names/emails
+  - Use isSigningOut state to disable button and show "Signing out..." text during logout
+  - Don't show auth buttons while authLoading to prevent flash of incorrect state
+---
+
+## 2026-01-12 - US-032
+Thread: https://ampcode.com/threads/T-019bb13e-e872-755f-8c54-e958ad5a225d
+- Implemented Resume Data Cloud Sync for authenticated users
+- Created API endpoint at /api/resume for saving/loading resume data to database
+  - GET: Load resume data for authenticated user (most recent)
+  - POST: Save resume data with upsert logic (create or update)
+- Enhanced useResumeStorage hook with cloud sync capabilities:
+  - On load: merge localStorage with cloud data (newer wins)
+  - On save: debounced sync to cloud (1 second delay)
+  - Tracks sync status: idle/syncing/synced/error
+- Created SyncIndicator component to show sync status:
+  - "Local only" with CloudOff icon for non-authenticated users
+  - "Syncing..." with loading spinner during sync
+  - "Synced" with checkmark on success
+  - "Sync failed" with error icon on failure
+- App continues to work fully without login (localStorage only)
+- Files changed:
+  - app/routes/api.resume.tsx (new - API endpoint for resume CRUD)
+  - app/hooks/use-resume-storage.ts (enhanced with cloud sync)
+  - app/components/sync-indicator.tsx (new - sync status indicator)
+  - app/routes/resume.tsx (integrated sync indicator)
+  - app/routes.ts (added api/resume route)
+- **Learnings for future iterations:**
+  - Use debounced cloud sync (setTimeout with ref) to avoid excessive API calls on rapid edits
+  - Track localStorage updatedAt timestamp to compare with cloud data for merge logic
+  - Wait for authLoading to finish before initializing data to ensure proper sync
+  - SyncStatus type: "idle" | "syncing" | "synced" | "error" with auto-reset to idle after feedback
+  - API resume endpoint uses eq() from drizzle-orm for query conditions
 ---

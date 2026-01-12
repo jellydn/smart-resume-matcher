@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { ThemeProvider } from "~/components/theme-provider";
 import { Header } from "~/components/layout/header";
+import { OfflineIndicator } from "~/components/offline-indicator";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -40,6 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Header />
             <main className="flex-1">{children}</main>
           </div>
+          <OfflineIndicator />
         </ThemeProvider>
         <ScrollRestoration />
         <Scripts />

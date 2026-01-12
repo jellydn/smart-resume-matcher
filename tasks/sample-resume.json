@@ -1,0 +1,91 @@
+{
+  "personalInfo": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1 (555) 123-4567",
+    "location": "San Francisco, CA",
+    "linkedin": "https://linkedin.com/in/johndoe",
+    "website": "https://johndoe.dev",
+    "summary": "Experienced software engineer with 8+ years of full-stack development experience. Passionate about building scalable systems and mentoring junior developers."
+  },
+  "experience": [
+    {
+      "id": "exp-1",
+      "title": "Senior Software Engineer",
+      "company": "Tech Corp",
+      "location": "San Francisco, CA",
+      "startDate": "2021-01",
+      "endDate": "",
+      "current": true,
+      "description": "Leading frontend architecture for enterprise applications",
+      "highlights": [
+        "Led migration from legacy Angular app to React, reducing bundle size by 40%",
+        "Implemented CI/CD pipeline reducing deployment time from 2 hours to 15 minutes"
+      ]
+    },
+    {
+      "id": "exp-2",
+      "title": "Software Engineer",
+      "company": "StartupXYZ",
+      "location": "Remote",
+      "startDate": "2018-06",
+      "endDate": "2020-12",
+      "current": false,
+      "description": "Full-stack development for B2B SaaS platform",
+      "highlights": [
+        "Built real-time collaboration features using WebSockets",
+        "Designed and implemented RESTful APIs serving 1M+ requests/day"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "degree": "Bachelor of Science in Computer Science",
+      "institution": "University of California, Berkeley",
+      "location": "Berkeley, CA",
+      "graduationDate": "2018-05",
+      "gpa": "3.8"
+    }
+  ],
+  "skills": [
+    { "id": "skill-1", "name": "TypeScript", "proficiency": "expert" },
+    { "id": "skill-2", "name": "React", "proficiency": "expert" },
+    { "id": "skill-3", "name": "Node.js", "proficiency": "advanced" },
+    { "id": "skill-4", "name": "PostgreSQL", "proficiency": "advanced" },
+    { "id": "skill-5", "name": "AWS", "proficiency": "intermediate" }
+  ],
+  "languages": [
+    { "id": "lang-1", "name": "English", "proficiency": "native" },
+    { "id": "lang-2", "name": "Spanish", "proficiency": "conversational" }
+  ],
+  "certifications": [
+    {
+      "id": "cert-1",
+      "name": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "date": "2023-03",
+      "url": "https://aws.amazon.com/certification"
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "name": "Open Source Dashboard",
+      "description": "A customizable analytics dashboard built with React and D3",
+      "url": "https://github.com/johndoe/dashboard",
+      "technologies": ["React", "D3.js", "TypeScript"],
+      "highlights": ["500+ GitHub stars", "Used by 50+ companies"]
+    }
+  ],
+  "openSource": [
+    {
+      "id": "os-1",
+      "project": "React Query",
+      "role": "contributor",
+      "url": "https://github.com/TanStack/query",
+      "description": "Contributed performance improvements to the core library",
+      "contributions": ["Fixed memory leak in cache invalidation", "Added TypeScript strict mode support"]
+    }
+  ]
+}
