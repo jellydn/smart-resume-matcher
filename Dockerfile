@@ -6,15 +6,14 @@ RUN apk add --no-cache python3 make g++
 
 FROM build-deps AS development-dependencies-env
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 FROM build-deps AS production-dependencies-env
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts && \
-    cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
-    npx node-gyp rebuild
+    pnpm rebuild better-sqlite3
 
 FROM build-deps AS build-env
 WORKDIR /app
