@@ -1,15 +1,17 @@
 import { defineConfig } from "drizzle-kit";
-import { env } from "./app/lib/env";
+import { env, isPostgres, requireDatabaseUrl } from "./app/lib/env";
 
 const baseConfig = {
 	schema: "./app/db/schema/index.ts",
 };
 
+const postgresUrl = isPostgres ? requireDatabaseUrl() : undefined;
+
 const postgresConfig = defineConfig({
 	...baseConfig,
 	dialect: "postgresql",
 	dbCredentials: {
-		url: env.databaseUrl || "",
+		url: postgresUrl ?? "",
 	},
 	out: "./drizzle/postgres",
 });
@@ -23,4 +25,4 @@ const sqliteConfig = defineConfig({
 	out: "./drizzle/sqlite",
 });
 
-export default env.databaseType === "postgres" ? postgresConfig : sqliteConfig;
+export default isPostgres ? postgresConfig : sqliteConfig;

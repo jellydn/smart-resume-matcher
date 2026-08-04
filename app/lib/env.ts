@@ -9,17 +9,19 @@ const envSchema = z.object({
 const parsed = envSchema.parse(process.env);
 
 // Derived values - no magic strings after validation
-export const isPostgres =
-	parsed.DATABASE_TYPE === "postgres" && !!parsed.DATABASE_URL;
+export const isPostgres = parsed.DATABASE_TYPE === "postgres";
+
+export function requireDatabaseUrl(): string {
+	if (!parsed.DATABASE_URL) {
+		throw new Error(
+			"DATABASE_URL is required when DATABASE_TYPE is 'postgres'",
+		);
+	}
+	return parsed.DATABASE_URL;
+}
 
 export const env = {
-	get databaseType(): "sqlite" | "postgres" {
-		return parsed.DATABASE_TYPE;
-	},
 	get databasePath(): string {
 		return parsed.DATABASE_PATH;
-	},
-	get databaseUrl(): string | undefined {
-		return parsed.DATABASE_URL;
 	},
 };
