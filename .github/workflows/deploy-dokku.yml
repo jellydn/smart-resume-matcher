@@ -12,12 +12,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
 
       - name: Deploy to Dokku
-        uses: dokku/github-action@4177b960b73c2a0d78fb4851214041d8e12d46e1 # v1.4.0
+        uses: dokku/github-action@06286975346ec9a8d3827e6c5329d0d159d4635d # v1.4.0
         with:
           git_remote_url: ${{ secrets.DOKKU_GIT_REMOTE_URL }}
           ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
