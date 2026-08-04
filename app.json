@@ -1,0 +1,16 @@
+{
+	"name": "smart-resume-matcher",
+	"description": "AI-Powered Resume Tailoring for Job Applications",
+	"scripts": {},
+	"env": {
+		"NODE_ENV": {
+			"value": "production"
+		},
+		"DATABASE_TYPE": {
+			"value": "sqlite"
+		},
+		"DATABASE_PATH": {
+			"value": "./data/sqlite.db"
+		}
+	}
+}

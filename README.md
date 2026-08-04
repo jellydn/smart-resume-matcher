@@ -248,6 +248,34 @@ pnpm run db:push:postgres
 pnpm run db:studio:postgres
 ```
 
+## 🚀 Dokku Deployment
+
+The application is configured for deployment on Dokku via Dockerfile and pnpm.
+
+### Dokku Server Setup
+
+```bash
+# Create Dokku app
+ssh dokku@95.111.232.131 apps:create smart-resume-matcher
+
+# Set up persistent storage for SQLite database
+ssh dokku@95.111.232.131 storage:ensure-directory smart-resume-matcher-data
+ssh dokku@95.111.232.131 storage:mount smart-resume-matcher /var/lib/dokku/data/storage/smart-resume-matcher-data:/app/data
+
+# Configure environment variables
+ssh dokku@95.111.232.131 config:set smart-resume-matcher NODE_ENV=production DATABASE_TYPE=sqlite DATABASE_PATH=/app/data/sqlite.db
+```
+
+### Deploy via Git
+
+```bash
+# Add Dokku git remote
+git remote add dokku dokku@95.111.232.131:smart-resume-matcher
+
+# Push to deploy
+git push dokku main
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

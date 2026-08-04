@@ -1,22 +1,27 @@
-FROM node:24-alpine AS development-dependencies-env
-COPY . /app
-WORKDIR /app
-RUN npm ci
+FROM node:24-alpine AS base
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 
-FROM node:24-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
+FROM base AS development-dependencies-env
 WORKDIR /app
-RUN npm ci --omit=dev
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-FROM node:24-alpine AS build-env
-COPY . /app/
+FROM base AS production-dependencies-env
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+
+FROM base AS build-env
+WORKDIR /app
+COPY . .
 COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
-RUN npm run build
+RUN pnpm run build
 
-FROM node:24-alpine
-COPY ./package.json package-lock.json /app/
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package.json pnpm-lock.yaml ./
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
-WORKDIR /app
-CMD ["npm", "run", "start"]
+EXPOSE 3000
+CMD ["pnpm", "run", "start"]

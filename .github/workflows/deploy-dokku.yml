@@ -1,0 +1,19 @@
+name: Deploy to Dokku
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    name: Deploy to Dokku
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Deploy to Dokku
+        uses: dokku/github-action@v1.4.0
+        with:
+          git_remote_url: 'ssh://dokku@95.111.232.131:22/smart-resume-matcher'
+          ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
