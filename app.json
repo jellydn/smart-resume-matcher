@@ -23,6 +23,10 @@
 		},
 		"DATABASE_PATH": {
 			"value": "/app/data/sqlite.db"
+		},
+		"BETTER_AUTH_SECRET": {
+			"description": "Secret key used by Better Auth for signing session tokens",
+			"generator": "secret"
 		}
 	}
 }
