@@ -8,12 +8,16 @@ jobs:
   deploy:
     name: Deploy to Dokku
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
         with:
           fetch-depth: 0
+
       - name: Deploy to Dokku
-        uses: dokku/github-action@v1.4.0
+        uses: dokku/github-action@4177b960b73c2a0d78fb4851214041d8e12d46e1 # v1.4.0
         with:
-          git_remote_url: 'ssh://dokku@95.111.232.131:22/smart-resume-matcher'
+          git_remote_url: ${{ secrets.DOKKU_GIT_REMOTE_URL }}
           ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}

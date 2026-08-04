@@ -256,21 +256,22 @@ The application is configured for deployment on Dokku via Dockerfile and pnpm.
 
 ```bash
 # Create Dokku app
-ssh dokku@95.111.232.131 apps:create smart-resume-matcher
+ssh dokku@<your-dokku-host> apps:create smart-resume-matcher
 
 # Set up persistent storage for SQLite database
-ssh dokku@95.111.232.131 storage:ensure-directory smart-resume-matcher-data
-ssh dokku@95.111.232.131 storage:mount smart-resume-matcher /var/lib/dokku/data/storage/smart-resume-matcher-data:/app/data
+ssh dokku@<your-dokku-host> storage:ensure-directory smart-resume-matcher-data
+ssh dokku@<your-dokku-host> storage:mount smart-resume-matcher /var/lib/dokku/data/storage/smart-resume-matcher-data:/app/data
 
-# Configure environment variables
-ssh dokku@95.111.232.131 config:set smart-resume-matcher NODE_ENV=production DATABASE_TYPE=sqlite DATABASE_PATH=/app/data/sqlite.db
+# Configure environment variables and secure auth secret
+BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+ssh dokku@<your-dokku-host> config:set smart-resume-matcher NODE_ENV=production DATABASE_TYPE=sqlite DATABASE_PATH=/app/data/sqlite.db BETTER_AUTH_SECRET="$BETTER_AUTH_SECRET"
 ```
 
 ### Deploy via Git
 
 ```bash
 # Add Dokku git remote
-git remote add dokku dokku@95.111.232.131:smart-resume-matcher
+git remote add dokku dokku@<your-dokku-host>:smart-resume-matcher
 
 # Push to deploy
 git push dokku main
