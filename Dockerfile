@@ -9,17 +9,18 @@ RUN pnpm install --frozen-lockfile
 FROM base AS production-dependencies-env
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3
-
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && \
+    cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
+    npx node-gyp rebuild
 FROM base AS build-env
 WORKDIR /app
 COPY . .
 COPY --from=development-dependencies-env /app/node_modules /app/node_modules
 RUN pnpm run build
-
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+RUN mkdir -p /app/data
 COPY package.json pnpm-lock.yaml ./
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
