@@ -2,6 +2,18 @@
 	"name": "smart-resume-matcher",
 	"description": "AI-Powered Resume Tailoring for Job Applications",
 	"scripts": {},
+	"healthchecks": {
+		"web": [
+			{
+				"type": "startup",
+				"name": "check-web",
+				"path": "/",
+				"timeout": 5,
+				"wait": 5,
+				"attempts": 6
+			}
+		]
+	},
 	"env": {
 		"NODE_ENV": {
 			"value": "production"
@@ -10,7 +22,7 @@
 			"value": "sqlite"
 		},
 		"DATABASE_PATH": {
-			"value": "./data/sqlite.db"
+			"value": "/app/data/sqlite.db"
 		}
 	}
 }

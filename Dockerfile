@@ -1,5 +1,5 @@
 FROM node:24-alpine AS base
-RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
+RUN apk add --no-cache python3 make g++ && corepack enable && corepack prepare pnpm@10.34.5 --activate
 
 FROM base AS development-dependencies-env
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN pnpm install --frozen-lockfile
 FROM base AS production-dependencies-env
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm rebuild better-sqlite3
 
 FROM base AS build-env
 WORKDIR /app
