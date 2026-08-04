@@ -12,7 +12,8 @@ export const sessions = selectedSchema.sessions;
 export const accounts = selectedSchema.accounts;
 export const userResumes = selectedSchema.userResumes;
 
-// Types
+// Types - both schemas have identical structure; prefer sqlite types
+// for consistency with the unified db export
 export type User = sqliteSchema.User;
 export type NewUser = sqliteSchema.NewUser;
 export type Session = sqliteSchema.Session;

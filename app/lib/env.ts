@@ -11,7 +11,6 @@ const parsed = envSchema.parse(process.env);
 // Derived values - no magic strings after validation
 export const isPostgres =
 	parsed.DATABASE_TYPE === "postgres" && !!parsed.DATABASE_URL;
-export const isSqlite = !isPostgres;
 
 export const env = {
 	get databaseType(): "sqlite" | "postgres" {
