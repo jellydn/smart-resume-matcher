@@ -1,6 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// Users table for authentication
 export const users = sqliteTable("users", {
 	id: text("id").primaryKey(),
 	email: text("email").notNull().unique(),
@@ -15,7 +14,6 @@ export const users = sqliteTable("users", {
 		.$defaultFn(() => new Date()),
 });
 
-// Sessions table for auth sessions
 export const sessions = sqliteTable("sessions", {
 	id: text("id").primaryKey(),
 	userId: text("user_id")
@@ -31,7 +29,6 @@ export const sessions = sqliteTable("sessions", {
 		.$defaultFn(() => new Date()),
 });
 
-// Accounts table for OAuth providers
 export const accounts = sqliteTable("accounts", {
 	id: text("id").primaryKey(),
 	userId: text("user_id")
@@ -58,7 +55,6 @@ export const accounts = sqliteTable("accounts", {
 		.$defaultFn(() => new Date()),
 });
 
-// User resumes table for storing resume data
 export const userResumes = sqliteTable("user_resumes", {
 	id: text("id").primaryKey(),
 	userId: text("user_id")

@@ -100,11 +100,14 @@ Click "Test Connection" to verify your API key works.
 
 ### Environment Variables
 
-| Key                       | Description        | Required | Default |
-| ------------------------- | ------------------ | -------- | ------- |
-| `VITE_OPENROUTER_API_KEY` | OpenRouter API key | No       | -       |
-| `VITE_OPENAI_API_KEY`     | OpenAI API key     | No       | -       |
-| `VITE_ANTHROPIC_API_KEY`  | Anthropic API key  | No       | -       |
+| Key                       | Description                                         | Required    | Default            |
+| ------------------------- | --------------------------------------------------- | ----------- | ------------------ |
+| `VITE_OPENROUTER_API_KEY` | OpenRouter API key                                  | No          | -                  |
+| `VITE_OPENAI_API_KEY`     | OpenAI API key                                      | No          | -                  |
+| `VITE_ANTHROPIC_API_KEY`  | Anthropic API key                                   | No          | -                  |
+| `DATABASE_TYPE`           | Database engine: `sqlite` or `postgres`              | No          | `sqlite`           |
+| `DATABASE_PATH`           | SQLite database file path (local development)        | No          | `./data/sqlite.db` |
+| `DATABASE_URL`            | PostgreSQL connection URL (required for `postgres`)  | Conditional | -                  |
 
 ### Local Storage Keys
 
@@ -209,6 +212,40 @@ pnpm run build
 
 # Run linter
 pnpm run lint
+```
+
+### Database
+
+The app uses **SQLite** locally by default. To use **PostgreSQL**, set `DATABASE_TYPE=postgres` and provide `DATABASE_URL`. PostgreSQL support is currently under review; verify authentication compatibility and existing migration history before using it in production.
+
+```bash
+# Generate a migration from the current schema
+pnpm run db:generate
+
+# Apply migrations
+pnpm run db:migrate
+
+# Push schema directly (no migration files)
+pnpm run db:push
+
+# Open Drizzle Studio to browse the database
+pnpm run db:studio
+```
+
+Dialect-specific variants are available when targeting a single engine. Migration output is separated by dialect under `drizzle/sqlite` and `drizzle/postgres`.
+
+When upgrading an existing checkout, verify the migration history before running a migrate command.
+
+```bash
+pnpm run db:generate:sqlite
+pnpm run db:migrate:sqlite
+pnpm run db:push:sqlite
+pnpm run db:studio:sqlite
+
+pnpm run db:generate:postgres
+pnpm run db:migrate:postgres
+pnpm run db:push:postgres
+pnpm run db:studio:postgres
 ```
 
 ## 🤝 Contributing
