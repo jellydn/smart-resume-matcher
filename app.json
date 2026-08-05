@@ -1,0 +1,32 @@
+{
+	"name": "smart-resume-matcher",
+	"description": "AI-Powered Resume Tailoring for Job Applications",
+	"scripts": {},
+	"healthchecks": {
+		"web": [
+			{
+				"type": "startup",
+				"name": "check-web",
+				"path": "/",
+				"timeout": 5,
+				"wait": 5,
+				"attempts": 6
+			}
+		]
+	},
+	"env": {
+		"NODE_ENV": {
+			"value": "production"
+		},
+		"DATABASE_TYPE": {
+			"value": "sqlite"
+		},
+		"DATABASE_PATH": {
+			"value": "/app/data/sqlite.db"
+		},
+		"BETTER_AUTH_SECRET": {
+			"description": "Secret key used by Better Auth for signing session tokens",
+			"generator": "secret"
+		}
+	}
+}

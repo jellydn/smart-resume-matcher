@@ -1,4 +1,11 @@
+.git
+.github
 .react-router
 build
 node_modules
+data
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
 README.md
