@@ -15,6 +15,12 @@ export const auth = betterAuth({
 		updateAge: 60 * 60 * 24, // Update session every 24 hours
 	},
 	trustedOrigins: process.env.AUTH_TRUSTED_ORIGINS
-		? process.env.AUTH_TRUSTED_ORIGINS.split(",").map((o) => o.trim())
-		: [process.env.APP_URL || "http://localhost:5173"],
+		? process.env.AUTH_TRUSTED_ORIGINS.split(",")
+				.map((o) => o.trim().replace(/\/+$/, ""))
+				.filter(Boolean)
+		: [
+				process.env.APP_URL
+					? process.env.APP_URL.trim().replace(/\/+$/, "")
+					: "http://localhost:5173",
+			],
 });

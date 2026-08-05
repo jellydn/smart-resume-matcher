@@ -122,14 +122,23 @@ async function callOllama(
 	messages: ChatMessage[],
 ): Promise<string> {
 	const rawUrl = baseUrl || "http://localhost:11434";
-	const parsedUrl = new URL(rawUrl);
+	let parsedUrl: URL;
+	try {
+		parsedUrl = new URL(rawUrl);
+	} catch {
+		throw new Error("Invalid Ollama URL format.");
+	}
+
 	if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
 		throw new Error(
 			"Invalid Ollama URL protocol. Only HTTP and HTTPS are permitted.",
 		);
 	}
 
-	const response = await fetch(`${parsedUrl.origin}/api/chat`, {
+	const normalizedPath = parsedUrl.pathname.replace(/\/+$/, "");
+	const endpoint = `${parsedUrl.origin}${normalizedPath}/api/chat`;
+
+	const response = await fetch(endpoint, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

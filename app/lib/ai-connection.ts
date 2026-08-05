@@ -124,7 +124,16 @@ async function testOllama(baseUrl: string): Promise<ConnectionTestResult> {
 	const rawUrl = baseUrl || "http://localhost:11434";
 
 	try {
-		const parsedUrl = new URL(rawUrl);
+		let parsedUrl: URL;
+		try {
+			parsedUrl = new URL(rawUrl);
+		} catch {
+			return {
+				success: false,
+				message: "Invalid Ollama URL format",
+			};
+		}
+
 		if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
 			return {
 				success: false,
@@ -133,7 +142,10 @@ async function testOllama(baseUrl: string): Promise<ConnectionTestResult> {
 			};
 		}
 
-		const response = await fetch(`${parsedUrl.origin}/api/tags`, {
+		const normalizedPath = parsedUrl.pathname.replace(/\/+$/, "");
+		const endpoint = `${parsedUrl.origin}${normalizedPath}/api/tags`;
+
+		const response = await fetch(endpoint, {
 			method: "GET",
 		});
 

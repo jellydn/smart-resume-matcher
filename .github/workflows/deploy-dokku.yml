@@ -21,6 +21,7 @@ jobs:
         env:
           HAS_GIT_REMOTE_URL: ${{ secrets.DOKKU_GIT_REMOTE_URL != '' }}
           HAS_SSH_PRIVATE_KEY: ${{ secrets.DOKKU_SSH_PRIVATE_KEY != '' }}
+          HAS_SSH_HOST_KEY: ${{ secrets.DOKKU_SSH_HOST_KEY != '' }}
         run: |
           echo "Checking required deployment secrets..."
           FAILED=0
@@ -36,6 +37,12 @@ jobs:
           else
             echo "::error::DOKKU_SSH_PRIVATE_KEY repository secret is missing or empty"
             FAILED=1
+          fi
+
+          if [ "$HAS_SSH_HOST_KEY" = "true" ]; then
+            echo "✓ DOKKU_SSH_HOST_KEY is configured"
+          else
+            echo "::warning::DOKKU_SSH_HOST_KEY repository secret is not set"
           fi
 
           if [ $FAILED -ne 0 ]; then
