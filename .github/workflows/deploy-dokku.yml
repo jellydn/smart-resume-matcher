@@ -15,9 +15,45 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Preflight secrets check
+        env:
+          HAS_GIT_REMOTE_URL: ${{ secrets.DOKKU_GIT_REMOTE_URL != '' }}
+          HAS_SSH_PRIVATE_KEY: ${{ secrets.DOKKU_SSH_PRIVATE_KEY != '' }}
+          HAS_SSH_HOST_KEY: ${{ secrets.DOKKU_SSH_HOST_KEY != '' }}
+        run: |
+          echo "Checking required deployment secrets..."
+          FAILED=0
+          if [ "$HAS_GIT_REMOTE_URL" = "true" ]; then
+            echo "✓ DOKKU_GIT_REMOTE_URL is configured"
+          else
+            echo "::error::DOKKU_GIT_REMOTE_URL repository secret is missing or empty"
+            FAILED=1
+          fi
+
+          if [ "$HAS_SSH_PRIVATE_KEY" = "true" ]; then
+            echo "✓ DOKKU_SSH_PRIVATE_KEY is configured"
+          else
+            echo "::error::DOKKU_SSH_PRIVATE_KEY repository secret is missing or empty"
+            FAILED=1
+          fi
+
+          if [ "$HAS_SSH_HOST_KEY" = "true" ]; then
+            echo "✓ DOKKU_SSH_HOST_KEY is configured"
+          else
+            echo "::warning::DOKKU_SSH_HOST_KEY repository secret is not set"
+          fi
+
+          if [ $FAILED -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Deploy to Dokku
         uses: dokku/github-action@06286975346ec9a8d3827e6c5329d0d159d4635d # v1.4.0
         with:
           git_remote_url: ${{ secrets.DOKKU_GIT_REMOTE_URL }}
           ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
+          ssh_host_key: ${{ secrets.DOKKU_SSH_HOST_KEY }}
+          trace: ${{ secrets.DOKKU_TRACE || 'false' }}
+
