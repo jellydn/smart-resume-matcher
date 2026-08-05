@@ -121,9 +121,15 @@ async function callOllama(
 	baseUrl: string,
 	messages: ChatMessage[],
 ): Promise<string> {
-	const url = baseUrl || "http://localhost:11434";
+	const rawUrl = baseUrl || "http://localhost:11434";
+	const parsedUrl = new URL(rawUrl);
+	if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+		throw new Error(
+			"Invalid Ollama URL protocol. Only HTTP and HTTPS are permitted.",
+		);
+	}
 
-	const response = await fetch(`${url}/api/chat`, {
+	const response = await fetch(`${parsedUrl.origin}/api/chat`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

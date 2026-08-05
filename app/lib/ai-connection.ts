@@ -121,10 +121,19 @@ async function testAnthropic(apiKey: string): Promise<ConnectionTestResult> {
 }
 
 async function testOllama(baseUrl: string): Promise<ConnectionTestResult> {
-	const url = baseUrl || "http://localhost:11434";
+	const rawUrl = baseUrl || "http://localhost:11434";
 
 	try {
-		const response = await fetch(`${url}/api/tags`, {
+		const parsedUrl = new URL(rawUrl);
+		if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+			return {
+				success: false,
+				message:
+					"Invalid Ollama URL protocol. Only HTTP and HTTPS are permitted.",
+			};
+		}
+
+		const response = await fetch(`${parsedUrl.origin}/api/tags`, {
 			method: "GET",
 		});
 
