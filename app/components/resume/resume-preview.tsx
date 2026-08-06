@@ -11,8 +11,8 @@ import {
 	MapPin,
 	Phone,
 } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
 import { LinkedinIcon } from "~/components/resume/linkedin-icon";
+import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import type { Resume } from "~/lib/types";
 

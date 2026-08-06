@@ -20,8 +20,8 @@ import {
 	X,
 	XCircle,
 } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
 import { LinkedinIcon } from "~/components/resume/linkedin-icon";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
