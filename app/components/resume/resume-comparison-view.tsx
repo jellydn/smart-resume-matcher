@@ -11,7 +11,6 @@ import {
 	Globe,
 	GraduationCap,
 	Languages,
-	Linkedin,
 	Mail,
 	MapPin,
 	Phone,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EditableText } from "~/components/resume/editable-text";
+import { LinkedinIcon } from "~/components/resume/linkedin-icon";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -236,7 +236,7 @@ function ResumePanel({
 					)}
 					{personalInfo.linkedin && (
 						<span className="flex items-center gap-1">
-							<Linkedin className="h-3 w-3" />
+							<LinkedinIcon className="h-3 w-3" />
 							LinkedIn
 						</span>
 					)}
