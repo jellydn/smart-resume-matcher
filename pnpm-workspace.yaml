@@ -1,8 +1,27 @@
+# ---------------------------------------------------------------------------
+# Deliberate config decisions from the pnpm 11 migration (#51) — do not
+# "fix" these back to pnpm 11 defaults without reading the rationale below.
+# ---------------------------------------------------------------------------
+
+# minimumReleaseAge: 0 — deliberate opt-out of pnpm 11's new 24h supply-chain
+# gate (default 1440 minutes). This repo merges dependency PRs daily, and the
+# gate stalls `pnpm install --frozen-lockfile` for hours on every fresh
+# transitive publish: when checked, 18 lockfile entries sat under the cutoff
+# (e.g. rolldown's platform bindings, terser, core-js-compat). Known CVEs are
+# still gated by `pnpm audit --audit-level=high` on every CI run.
+minimumReleaseAge: 0
+
+# allowBuilds — pnpm 11 removed the old `onlyBuiltDependencies` setting and
+# replaced it with this map. Required so better-sqlite3/esbuild keep running
+# their native build scripts under pnpm 11's strictDepBuilds (default true);
+# without it, installs fail with ERR_PNPM_IGNORED_BUILDS.
 allowBuilds:
   better-sqlite3: true
   esbuild: true
+
+# overrides — moved here from package.json's `pnpm` field, which pnpm 11 no
+# longer reads.
 overrides:
   serialize-javascript: ^7.0.5
   picomatch: ^4.0.4
   esbuild: ^0.28.0
-minimumReleaseAge: 0
