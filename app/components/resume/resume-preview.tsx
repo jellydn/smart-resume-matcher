@@ -7,12 +7,12 @@ import {
 	Globe,
 	GraduationCap,
 	Languages,
-	Linkedin,
 	Mail,
 	MapPin,
 	Phone,
 } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
+import { LinkedinIcon } from "~/components/resume/linkedin-icon";
 import { Separator } from "~/components/ui/separator";
 import type { Resume } from "~/lib/types";
 
@@ -51,7 +51,7 @@ export function ResumePreview({ resume }: ResumePreviewProps) {
 					)}
 					{personalInfo.linkedin && (
 						<span className="flex items-center gap-1">
-							<Linkedin className="h-3.5 w-3.5" />
+							<LinkedinIcon className="h-3.5 w-3.5" />
 							LinkedIn
 						</span>
 					)}

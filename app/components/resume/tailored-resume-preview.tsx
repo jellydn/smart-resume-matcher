@@ -9,7 +9,6 @@ import {
 	Globe,
 	GraduationCap,
 	Languages,
-	Linkedin,
 	Mail,
 	MapPin,
 	Phone,
@@ -22,6 +21,7 @@ import {
 	XCircle,
 } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
+import { LinkedinIcon } from "~/components/resume/linkedin-icon";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
@@ -411,7 +411,7 @@ export function TailoredResumePreview({
 												rel="noopener noreferrer"
 												className="flex items-center gap-1 hover:text-primary"
 											>
-												<Linkedin className="h-3 w-3" />
+												<LinkedinIcon className="h-3 w-3" />
 												LinkedIn
 											</a>
 										)}
