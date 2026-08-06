@@ -80,7 +80,7 @@ Job hunting is time-consuming, and tailoring resumes for each application is ted
 | **OpenAI**     | Yes          | Direct OpenAI API access                             |
 | **Anthropic**  | Yes          | Claude API access                                    |
 | **WebLLM**     | No           | Browser-based AI, free but slower                    |
-| **Ollama**     | No           | Local AI, requires Ollama running                    |
+| **Ollama**     | No           | Local AI, requires Ollama running; base URL must be `http://` or `https://`, and a custom base path (e.g. a reverse proxy) is preserved |
 
 Click "Test Connection" to verify your API key works.
 
