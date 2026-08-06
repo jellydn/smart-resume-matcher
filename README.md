@@ -108,6 +108,8 @@ Click "Test Connection" to verify your API key works.
 | `DATABASE_TYPE`           | Database engine: `sqlite` or `postgres`              | No          | `sqlite`           |
 | `DATABASE_PATH`           | SQLite database file path (local development)        | No          | `./data/sqlite.db` |
 | `DATABASE_URL`            | PostgreSQL connection URL (required for `postgres`)  | Conditional | -                  |
+| `APP_URL`                 | Public URL of your deployment (e.g. `https://app.example.com`); used as the default trusted origin for auth | No          | -                  |
+| `AUTH_TRUSTED_ORIGINS`    | Comma-separated list of allowed auth origins; overrides `APP_URL` when multiple domains must be trusted | No          | `APP_URL` or `http://localhost:5173` |
 
 ### Local Storage Keys
 
@@ -264,7 +266,10 @@ ssh dokku@<your-dokku-host> storage:mount smart-resume-matcher /var/lib/dokku/da
 
 # Configure environment variables (BETTER_AUTH_SECRET is auto-generated via app.json if omitted)
 BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-ssh dokku@<your-dokku-host> config:set smart-resume-matcher NODE_ENV=production DATABASE_TYPE=sqlite DATABASE_PATH=/app/data/sqlite.db BETTER_AUTH_SECRET="$BETTER_AUTH_SECRET"
+ssh dokku@<your-dokku-host> config:set smart-resume-matcher NODE_ENV=production DATABASE_TYPE=sqlite DATABASE_PATH=/app/data/sqlite.db BETTER_AUTH_SECRET="$BETTER_AUTH_SECRET" APP_URL="https://<your-app-domain>"
+
+> `APP_URL` is required in production so Better Auth trusts your real domain
+> instead of falling back to `http://localhost:5173`.
 
 ### Deploy via Git
 
@@ -275,6 +280,17 @@ git remote add dokku dokku@<your-dokku-host>:smart-resume-matcher
 # Push to deploy
 git push dokku main
 ```
+
+### Deploy via GitHub Actions (optional)
+
+The workflow `.github/workflows/deploy-dokku.yml` deploys automatically on every push to `main`. Configure these repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret                    | Required    | Description                                                        |
+| ------------------------- | ----------- | ------------------------------------------------------------------ |
+| `DOKKU_GIT_REMOTE_URL`    | Yes         | Dokku git remote, e.g. `dokku@<host>:smart-resume-matcher`. The deploy fails if missing. |
+| `DOKKU_SSH_PRIVATE_KEY`   | Yes         | SSH private key authorized to push to the Dokku app.               |
+| `DOKKU_SSH_HOST_KEY`      | No          | SSH host key of the Dokku server; recommended to prevent host key spoofing. |
+| `DOKKU_TRACE`             | No          | Set to `true` for verbose deploy output (default `false`).         |
 
 ## 🤝 Contributing
 
