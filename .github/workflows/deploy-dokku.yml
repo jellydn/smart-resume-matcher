@@ -4,6 +4,15 @@ on:
   push:
     branches: ["main"]
 
+# Guard against the concurrent-push race observed when two merges land back-to-back:
+# two deploy runs pushing to the Dokku remote at once caused one to fail with
+# "cannot lock ref 'refs/heads/master': is at <a> but expected <b>". Serialize deploys
+# per ref and never cancel a push already in flight (a mid-push cancel could leave the
+# remote ref in a bad state); older queued runs are dropped, so only the latest lands.
+concurrency:
+  group: deploy-dokku-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy to Dokku
