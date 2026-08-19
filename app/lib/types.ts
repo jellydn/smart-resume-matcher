@@ -331,3 +331,19 @@ export const jobHistorySchema = z.array(jobHistoryEntrySchema);
 export type JobHistory = z.infer<typeof jobHistorySchema>;
 
 export const MAX_JOB_HISTORY_ENTRIES = 10;
+
+// Bio Generator Types
+// Two ready-to-use options per tone (fun & casual, professional)
+export const bioResultSchema = z.object({
+	funCasual: z.array(z.string()).length(2),
+	professional: z.array(z.string()).length(2),
+});
+
+export type BioResult = z.infer<typeof bioResultSchema>;
+
+// Bio Generator Service Result
+export interface BioGenerationResult {
+	success: boolean;
+	result?: BioResult;
+	error?: string;
+}
