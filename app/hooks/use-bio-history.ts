@@ -11,7 +11,7 @@ import {
 	MAX_BIO_HISTORY_ENTRIES,
 } from "~/lib/types";
 
-const STORAGE_KEY = "resume-matcher-bio-history";
+export const STORAGE_KEY = "resume-matcher-bio-history";
 
 interface UseBioHistoryReturn {
 	history: BioHistory;

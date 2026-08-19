@@ -12,19 +12,28 @@ export default defineConfig({
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "json-summary"],
-			// Coverage is measured only for modules that have unit tests. Add a
-			// path here whenever a new module gains a test file so its coverage
-			// is enforced by CI too.
+			// Coverage is measured only for modules that have unit tests, so the
+			// thresholds below reflect *tested* code rather than the whole app.
+			//
+			// Adding a tested module:
+			//   1. Add its path (relative to the project root) to `include`.
+			//   2. Run `pnpm test:coverage` and read the "All files" row.
+			//   3. Raise the matching threshold to that value, rounded down to
+			//      the nearest 5, so CI tracks the growth instead of drifting.
+			//
+			// The round-down keeps a few points of headroom so minor V8/Node
+			// version variance doesn't cause false CI failures.
 			include: [
 				"app/lib/bio-generator.ts",
 				"app/lib/resume-parser.ts",
 				"app/components/resume/cv-upload.tsx",
+				"app/hooks/use-bio-history.ts",
 			],
 			thresholds: {
-				statements: 50,
-				lines: 50,
-				functions: 50,
-				branches: 45,
+				statements: 70,
+				lines: 70,
+				functions: 65,
+				branches: 65,
 			},
 		},
 	},

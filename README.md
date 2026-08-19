@@ -209,12 +209,32 @@ pnpm run dev
 # Type check
 pnpm run typecheck
 
+# Run tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
 # Build for production
 pnpm run build
 
 # Run linter
 pnpm run lint
 ```
+
+### Testing & Coverage
+
+Tests use [Vitest](https://vitest.dev/). Unit tests cover the bio generator and resume parser, and the CV upload edit flow is covered with Testing Library + jsdom.
+
+Coverage thresholds are enforced in CI (the `test` job runs `pnpm test:coverage`) and are scoped to the modules that actually have tests, via `coverage.include` in `vitest.config.ts`. To keep them honest as coverage grows:
+
+1. When a module gains its first test file, add its path to `coverage.include`.
+2. Run `pnpm test:coverage` and read the `All files` row.
+3. Raise the matching threshold (statements/lines/functions/branches) to that number, rounded down to the nearest 5.
+
+This keeps thresholds rising with coverage while leaving a few points of headroom for minor V8/Node-version variance.
+
+The same CI job reads the `json-summary` report and posts (or updates) a **Test coverage** comment on each pull request, so the numbers are visible without opening the CI logs.
 
 ### Database
 
