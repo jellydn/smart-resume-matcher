@@ -1,14 +1,3 @@
-# ---------------------------------------------------------------------------
-# Deliberate config decisions from the pnpm 11 migration (#51) — do not
-# "fix" these back to pnpm 11 defaults without reading the rationale below.
-# ---------------------------------------------------------------------------
-
-# minimumReleaseAge: 0 — deliberate opt-out of pnpm 11's new 24h supply-chain
-# gate (default 1440 minutes). This repo merges dependency PRs daily, and the
-# gate stalls `pnpm install --frozen-lockfile` for hours on every fresh
-# transitive publish: when checked, 18 lockfile entries sat under the cutoff
-# (e.g. rolldown's platform bindings, terser, core-js-compat). Known CVEs are
-# still gated by `pnpm audit --audit-level=high` on every CI run.
 minimumReleaseAge: 0
 
 # allowBuilds — pnpm 11 removed the old `onlyBuiltDependencies` setting and
@@ -27,4 +16,4 @@ overrides:
   esbuild: ^0.28.0
   # nanoid <3.3.18 (transitive via postcss/vite) is vulnerable to GHSA-2v37-7h3g-55p8.
   # Scoped to the v3 line so docx's nanoid@5 stays untouched.
-  "nanoid@<3.3.18": 3.3.18
+  "nanoid@<3.3.18": 6.0.1
