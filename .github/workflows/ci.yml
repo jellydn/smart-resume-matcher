@@ -88,33 +88,42 @@ jobs:
               '<!-- coverage-comment -->',
             ].join('\n')
 
-            const { owner, repo } = context.repo
-            const issueNumber = context.issue.number
+            // Posting is best-effort: PR tokens are read-only in some repos,
+            // so a 403 here must not fail the job. Coverage enforcement already
+            // happens in the `pnpm test:coverage` step above.
+            try {
+              const { owner, repo } = context.repo
+              const issueNumber = context.issue.number
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number: issueNumber,
-            })
-            const existing = comments.find(
-              (comment) =>
-                comment.body && comment.body.includes('<!-- coverage-comment -->'),
-            )
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner,
-                repo,
-                comment_id: existing.id,
-                body,
-              })
-            } else {
-              await github.rest.issues.createComment({
+              const { data: comments } = await github.rest.issues.listComments({
                 owner,
                 repo,
                 issue_number: issueNumber,
-                body,
               })
+              const existing = comments.find(
+                (comment) =>
+                  comment.body && comment.body.includes('<!-- coverage-comment -->'),
+              )
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                  body,
+                })
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body,
+                })
+              }
+            } catch (error) {
+              core.warning(
+                `Could not post coverage comment: ${error instanceof Error ? error.message : String(error)}`,
+              )
             }
 
   build:
