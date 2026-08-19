@@ -113,9 +113,12 @@ function parseOptionsText(content: string): BioResult | null {
 		}
 		if (!current || !trimmed) continue;
 
+		// Options may be separated by a newline ("Option 1:\n...") or flow
+		// inline on the same line ("...loop. Option 2: ..."), so split on any
+		// whitespace-preceded "option N:" rather than requiring a newline.
 		const options = [
 			...trimmed.matchAll(
-				/option\s*\d+\s*:?\s*([\s\S]*?)(?=\n\s*option\s*\d+\s*:|\s*$)/gi,
+				/option\s*\d+\s*:?\s*([\s\S]*?)(?=\s+option\s*\d+\s*:|\s*$)/gi,
 			),
 		]
 			.map((match) => match[1].trim().replace(/\s+/g, " "))
@@ -132,7 +135,7 @@ function parseOptionsText(content: string): BioResult | null {
 		// them (fun & casual first, per the prompt)
 		const allOptions = [
 			...content.matchAll(
-				/option\s*\d+\s*:?\s*([\s\S]*?)(?=\n\s*option\s*\d+\s*:|\s*$)/gi,
+				/option\s*\d+\s*:?\s*([\s\S]*?)(?=\s+option\s*\d+\s*:|\s*$)/gi,
 			),
 		]
 			.map((match) => match[1].trim().replace(/\s+/g, " "))

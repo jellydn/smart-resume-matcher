@@ -94,6 +94,23 @@ Option 2: Dung is an AI enthusiast.`;
 			});
 		});
 
+		it("parses options that flow inline on the same line", () => {
+			const text = `Fun & Casual version
+Option 1: I'm a Singapore-based engineer. Option 2: I've built software across Asia.
+Professional version
+Option 1: Dung is a Senior Engineer. Option 2: Dung is an AI enthusiast.`;
+			expect(parseAIResponse(text)).toEqual({
+				funCasual: [
+					"I'm a Singapore-based engineer.",
+					"I've built software across Asia.",
+				],
+				professional: [
+					"Dung is a Senior Engineer.",
+					"Dung is an AI enthusiast.",
+				],
+			});
+		});
+
 		it("matches headings case-insensitively and without trailing colons", () => {
 			const text = `FUN & CASUAL VERSION
 Option 1: A
