@@ -10,6 +10,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { BioHistoryPanel } from "~/components/bio/bio-history-panel";
+import { CvUpload } from "~/components/resume/cv-upload";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import {
@@ -33,7 +34,12 @@ import { useAISettings } from "~/hooks/use-ai-settings";
 import { useBioHistory } from "~/hooks/use-bio-history";
 import { useResumeStorage } from "~/hooks/use-resume-storage";
 import { generateBios } from "~/lib/bio-generator";
-import type { BioHistoryEntry, BioLength, BioResult } from "~/lib/types";
+import type {
+	BioHistoryEntry,
+	BioLength,
+	BioResult,
+	Resume,
+} from "~/lib/types";
 import { bioLengthLabels } from "~/lib/types";
 import type { Route } from "./+types/bio";
 
@@ -82,7 +88,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 export default function BioPage() {
-	const { resume, isLoaded: isResumeLoaded } = useResumeStorage();
+	const { resume, setResume, isLoaded: isResumeLoaded } = useResumeStorage();
 	const { settings, isLoaded: isSettingsLoaded } = useAISettings();
 	const {
 		history,
@@ -145,6 +151,15 @@ export default function BioPage() {
 		setGenerationError("");
 		resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 	}, []);
+
+	const handleImportResume = useCallback(
+		(importedResume: Resume) => {
+			setResume(importedResume);
+			setResult(null);
+			setGenerationError("");
+		},
+		[setResume],
+	);
 
 	const handleCopy = useCallback(
 		async (tone: BioTone, index: number) => {
@@ -213,213 +228,211 @@ export default function BioPage() {
 					/>
 				)}
 
-				{isResumeLoaded && !hasProfile && (
-					<Alert>
-						<AlertCircle className="h-4 w-4" />
-						<AlertTitle>Profile Required</AlertTitle>
-						<AlertDescription>
-							Please{" "}
+				{!isResumeLoaded ? (
+					<p className="text-center text-sm text-muted-foreground">
+						Loading your profile...
+					</p>
+				) : !hasProfile ? (
+					<div className="space-y-6">
+						<CvUpload onUpload={handleImportResume} />
+						<p className="text-center text-sm text-muted-foreground">
+							Prefer to fill in the details yourself?{" "}
 							<Link to="/resume" className="underline text-primary">
-								create or upload your resume
-							</Link>{" "}
-							first so we can turn it into bio options.
-						</AlertDescription>
-					</Alert>
-				)}
+								Use the resume form
+							</Link>
+						</p>
+					</div>
+				) : (
+					<>
+						<Card>
+							<CardHeader>
+								<CardTitle>Your Profile</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-4">
+								<div className="flex items-center gap-4">
+									<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+										<UserRound className="h-5 w-5 text-primary" />
+									</div>
+									<div className="min-w-0">
+										<p className="font-medium truncate">
+											{resume.personalInfo.name}
+										</p>
+										<p className="text-sm text-muted-foreground truncate">
+											{summaryParts.length > 0
+												? summaryParts.join(" • ")
+												: "No details yet"}
+										</p>
+									</div>
+								</div>
 
-				<Card>
-					<CardHeader>
-						<CardTitle>Your Profile</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						{!isResumeLoaded ? (
-							<p className="text-sm text-muted-foreground">
-								Loading your profile...
-							</p>
-						) : hasProfile ? (
-							<div className="flex items-center gap-4">
-								<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-									<UserRound className="h-5 w-5 text-primary" />
+								<Button
+									size="lg"
+									onClick={handleGenerate}
+									disabled={isGenerating || !isSettingsLoaded}
+									className="w-full sm:w-auto"
+								>
+									{isGenerating ? (
+										<>
+											<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+											Generating Bios...
+										</>
+									) : (
+										<>
+											<Sparkles className="h-4 w-4 mr-2" />
+											Generate My Bios
+										</>
+									)}
+								</Button>
+							</CardContent>
+						</Card>
+
+						<Card>
+							<CardHeader>
+								<CardTitle>Customize Your Bios</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-4">
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
+										<Label htmlFor="bio-prompt">
+											Extra guidance{" "}
+											<span className="text-muted-foreground">(optional)</span>
+										</Label>
+										<span
+											className={`text-xs ${
+												customPrompt.length > MAX_PROMPT_LENGTH * 0.9
+													? "text-destructive"
+													: "text-muted-foreground"
+											}`}
+										>
+											{customPrompt.length} / {MAX_PROMPT_LENGTH}
+										</span>
+									</div>
+									<Textarea
+										id="bio-prompt"
+										placeholder="e.g., mention my open-source work, or highlight my interest in AI"
+										value={customPrompt}
+										onChange={(e) => {
+											if (e.target.value.length <= MAX_PROMPT_LENGTH) {
+												setCustomPrompt(e.target.value);
+											}
+										}}
+										className="min-h-[80px] resize-y"
+										disabled={isGenerating}
+									/>
 								</div>
-								<div className="min-w-0">
-									<p className="font-medium truncate">
-										{resume.personalInfo.name}
-									</p>
-									<p className="text-sm text-muted-foreground truncate">
-										{summaryParts.length > 0
-											? summaryParts.join(" • ")
-											: "No details yet"}
+
+								<div className="space-y-2">
+									<Label htmlFor="bio-length">Length</Label>
+									<Select
+										value={length}
+										onValueChange={(value) => setLength(value as BioLength)}
+										disabled={isGenerating}
+									>
+										<SelectTrigger
+											id="bio-length"
+											className="w-full sm:w-[260px]"
+										>
+											<SelectValue placeholder="Select a length" />
+										</SelectTrigger>
+										<SelectContent>
+											{(Object.keys(bioLengthLabels) as BioLength[]).map(
+												(bioLength) => (
+													<SelectItem key={bioLength} value={bioLength}>
+														{bioLengthLabels[bioLength]}
+													</SelectItem>
+												),
+											)}
+										</SelectContent>
+									</Select>
+									<p className="text-sm text-muted-foreground">
+										How detailed each bio should be.
 									</p>
 								</div>
-							</div>
-						) : (
-							<p className="text-sm text-muted-foreground">
-								No profile data found. Create or upload your resume to get
-								started.
-							</p>
+							</CardContent>
+						</Card>
+
+						{generationError && (
+							<Alert variant="destructive">
+								<AlertCircle className="h-4 w-4" />
+								<AlertTitle>Generation Failed</AlertTitle>
+								<AlertDescription>{generationError}</AlertDescription>
+							</Alert>
 						)}
 
-						<Button
-							size="lg"
-							onClick={handleGenerate}
-							disabled={!hasProfile || isGenerating || !isSettingsLoaded}
-							className="w-full sm:w-auto"
-						>
-							{isGenerating ? (
-								<>
-									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									Generating Bios...
-								</>
-							) : (
-								<>
-									<Sparkles className="h-4 w-4 mr-2" />
-									Generate My Bios
-								</>
+						<div ref={resultsRef} className="space-y-6 scroll-mt-24">
+							{result && (
+								<Tabs defaultValue="funCasual">
+									<TabsList className="grid w-full grid-cols-2">
+										{(["funCasual", "professional"] as BioTone[]).map(
+											(tone) => (
+												<TabsTrigger key={tone} value={tone}>
+													{toneLabels[tone]}
+												</TabsTrigger>
+											),
+										)}
+									</TabsList>
+									{(["funCasual", "professional"] as BioTone[]).map((tone) => (
+										<TabsContent key={tone} value={tone} className="mt-6">
+											<div className="space-y-4">
+												{result[tone].map((bio, index) => {
+													const key = `${tone}-${index}`;
+													const isCopied = copiedKey === key;
+													return (
+														<Card key={key}>
+															<CardHeader>
+																<CardTitle className="text-sm text-muted-foreground">
+																	Option {index + 1}
+																</CardTitle>
+																<CardAction>
+																	<Button
+																		variant="outline"
+																		size="sm"
+																		onClick={() => handleCopy(tone, index)}
+																	>
+																		{isCopied ? (
+																			<>
+																				<Check className="h-4 w-4 mr-1" />
+																				Copied!
+																			</>
+																		) : (
+																			<>
+																				<Copy className="h-4 w-4 mr-1" />
+																				Copy
+																			</>
+																		)}
+																	</Button>
+																</CardAction>
+															</CardHeader>
+															<CardContent>
+																<p className="text-sm leading-relaxed text-muted-foreground">
+																	{bio}
+																</p>
+															</CardContent>
+														</Card>
+													);
+												})}
+											</div>
+										</TabsContent>
+									))}
+								</Tabs>
 							)}
-						</Button>
-					</CardContent>
-				</Card>
 
-				<Card>
-					<CardHeader>
-						<CardTitle>Customize Your Bios</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<div className="space-y-2">
-							<div className="flex items-center justify-between">
-								<Label htmlFor="bio-prompt">
-									Extra guidance{" "}
-									<span className="text-muted-foreground">(optional)</span>
-								</Label>
-								<span
-									className={`text-xs ${
-										customPrompt.length > MAX_PROMPT_LENGTH * 0.9
-											? "text-destructive"
-											: "text-muted-foreground"
-									}`}
-								>
-									{customPrompt.length} / {MAX_PROMPT_LENGTH}
-								</span>
-							</div>
-							<Textarea
-								id="bio-prompt"
-								placeholder="e.g., mention my open-source work, or highlight my interest in AI"
-								value={customPrompt}
-								onChange={(e) => {
-									if (e.target.value.length <= MAX_PROMPT_LENGTH) {
-										setCustomPrompt(e.target.value);
-									}
-								}}
-								className="min-h-[80px] resize-y"
-								disabled={isGenerating}
-							/>
+							{result && (
+								<div className="flex justify-center">
+									<Button
+										variant="outline"
+										onClick={handleGenerate}
+										disabled={isGenerating}
+									>
+										{" "}
+										<Sparkles className="h-4 w-4 mr-2" />
+										Regenerate
+									</Button>
+								</div>
+							)}
 						</div>
-
-						<div className="space-y-2">
-							<Label htmlFor="bio-length">Length</Label>
-							<Select
-								value={length}
-								onValueChange={(value) => setLength(value as BioLength)}
-								disabled={isGenerating}
-							>
-								<SelectTrigger id="bio-length" className="w-full sm:w-[260px]">
-									<SelectValue placeholder="Select a length" />
-								</SelectTrigger>
-								<SelectContent>
-									{(Object.keys(bioLengthLabels) as BioLength[]).map(
-										(bioLength) => (
-											<SelectItem key={bioLength} value={bioLength}>
-												{bioLengthLabels[bioLength]}
-											</SelectItem>
-										),
-									)}
-								</SelectContent>
-							</Select>
-							<p className="text-sm text-muted-foreground">
-								How detailed each bio should be.
-							</p>
-						</div>
-					</CardContent>
-				</Card>
-
-				{generationError && (
-					<Alert variant="destructive">
-						<AlertCircle className="h-4 w-4" />
-						<AlertTitle>Generation Failed</AlertTitle>
-						<AlertDescription>{generationError}</AlertDescription>
-					</Alert>
+					</>
 				)}
-
-				<div ref={resultsRef} className="space-y-6 scroll-mt-24">
-					{result && (
-						<Tabs defaultValue="funCasual">
-							<TabsList className="grid w-full grid-cols-2">
-								{(["funCasual", "professional"] as BioTone[]).map((tone) => (
-									<TabsTrigger key={tone} value={tone}>
-										{toneLabels[tone]}
-									</TabsTrigger>
-								))}
-							</TabsList>
-							{(["funCasual", "professional"] as BioTone[]).map((tone) => (
-								<TabsContent key={tone} value={tone} className="mt-6">
-									<div className="space-y-4">
-										{result[tone].map((bio, index) => {
-											const key = `${tone}-${index}`;
-											const isCopied = copiedKey === key;
-											return (
-												<Card key={key}>
-													<CardHeader>
-														<CardTitle className="text-sm text-muted-foreground">
-															Option {index + 1}
-														</CardTitle>
-														<CardAction>
-															<Button
-																variant="outline"
-																size="sm"
-																onClick={() => handleCopy(tone, index)}
-															>
-																{isCopied ? (
-																	<>
-																		<Check className="h-4 w-4 mr-1" />
-																		Copied!
-																	</>
-																) : (
-																	<>
-																		<Copy className="h-4 w-4 mr-1" />
-																		Copy
-																	</>
-																)}
-															</Button>
-														</CardAction>
-													</CardHeader>
-													<CardContent>
-														<p className="text-sm leading-relaxed text-muted-foreground">
-															{bio}
-														</p>
-													</CardContent>
-												</Card>
-											);
-										})}
-									</div>
-								</TabsContent>
-							))}
-						</Tabs>
-					)}
-
-					{result && (
-						<div className="flex justify-center">
-							<Button
-								variant="outline"
-								onClick={handleGenerate}
-								disabled={isGenerating}
-							>
-								{" "}
-								<Sparkles className="h-4 w-4 mr-2" />
-								Regenerate
-							</Button>
-						</div>
-					)}
-				</div>
 			</div>
 		</div>
 	);

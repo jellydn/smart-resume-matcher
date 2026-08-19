@@ -8,6 +8,14 @@ import {
 	X,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { CertificationsForm } from "~/components/resume/certifications-form";
+import { EducationForm } from "~/components/resume/education-form";
+import { ExperienceForm } from "~/components/resume/experience-form";
+import { LanguagesForm } from "~/components/resume/languages-form";
+import { OpenSourceForm } from "~/components/resume/open-source-form";
+import { PersonalInfoForm } from "~/components/resume/personal-info-form";
+import { ProjectsForm } from "~/components/resume/projects-form";
+import { SkillsForm } from "~/components/resume/skills-form";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import {
@@ -17,11 +25,22 @@ import {
 	CardHeader,
 	CardTitle,
 } from "~/components/ui/card";
+import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import { useAISettings } from "~/hooks/use-ai-settings";
 import { extractTextFromCvFile, getCvFileFormat } from "~/lib/cv-extract";
 import { MAX_CV_TEXT_LENGTH, parseResumeText } from "~/lib/resume-parser";
-import type { Resume } from "~/lib/types";
+import type {
+	Certification,
+	Education,
+	Experience,
+	Language,
+	OpenSource,
+	PersonalInfo,
+	Project,
+	Resume,
+	Skill,
+} from "~/lib/types";
 import { cn } from "~/lib/utils";
 import { ResumePreview } from "./resume-preview";
 
@@ -40,10 +59,15 @@ export function CvUpload({ onUpload, className }: CvUploadProps) {
 	const [fileName, setFileName] = useState<string | null>(null);
 	const [cvText, setCvText] = useState("");
 	const [parsedResume, setParsedResume] = useState<Resume | null>(null);
+	const [draftResume, setDraftResume] = useState<Resume | null>(null);
+	const [isEditing, setIsEditing] = useState(false);
+	const [isPersonalInfoValid, setIsPersonalInfoValid] = useState(true);
 
 	const handleFile = useCallback(async (file: File) => {
 		setError(null);
 		setParsedResume(null);
+		setDraftResume(null);
+		setIsEditing(false);
 
 		if (!getCvFileFormat(file.name)) {
 			setError(
@@ -114,6 +138,9 @@ export function CvUpload({ onUpload, className }: CvUploadProps) {
 
 		if (result.success && result.resume) {
 			setParsedResume(result.resume);
+			setDraftResume(result.resume);
+			setIsEditing(true);
+			setIsPersonalInfoValid(true);
 		} else {
 			setError(result.error || "Failed to parse resume");
 		}
@@ -122,20 +149,73 @@ export function CvUpload({ onUpload, className }: CvUploadProps) {
 	}, [cvText, settings, isSettingsLoaded]);
 
 	const handleConfirm = useCallback(() => {
-		if (parsedResume) {
-			onUpload(parsedResume);
+		if (draftResume) {
+			onUpload(draftResume);
 		}
-	}, [parsedResume, onUpload]);
+	}, [draftResume, onUpload]);
 
 	const handleReset = useCallback(() => {
 		setParsedResume(null);
+		setDraftResume(null);
+		setIsEditing(false);
+		setIsPersonalInfoValid(true);
 		setError(null);
 	}, []);
+
+	const updateDraft = useCallback(
+		<K extends keyof Resume>(key: K, value: Resume[K]) => {
+			setDraftResume((prev) => (prev ? { ...prev, [key]: value } : prev));
+		},
+		[],
+	);
+
+	const handlePersonalInfoChange = useCallback(
+		(data: PersonalInfo, isValid: boolean) => {
+			updateDraft("personalInfo", data);
+			setIsPersonalInfoValid(isValid);
+		},
+		[updateDraft],
+	);
+
+	const handleExperienceChange = useCallback(
+		(data: Experience[]) => updateDraft("experience", data),
+		[updateDraft],
+	);
+
+	const handleEducationChange = useCallback(
+		(data: Education[]) => updateDraft("education", data),
+		[updateDraft],
+	);
+
+	const handleSkillsChange = useCallback(
+		(data: Skill[]) => updateDraft("skills", data),
+		[updateDraft],
+	);
+
+	const handleLanguagesChange = useCallback(
+		(data: Language[]) => updateDraft("languages", data),
+		[updateDraft],
+	);
+
+	const handleCertificationsChange = useCallback(
+		(data: Certification[]) => updateDraft("certifications", data),
+		[updateDraft],
+	);
+
+	const handleProjectsChange = useCallback(
+		(data: Project[]) => updateDraft("projects", data),
+		[updateDraft],
+	);
+
+	const handleOpenSourceChange = useCallback(
+		(data: OpenSource[]) => updateDraft("openSource", data),
+		[updateDraft],
+	);
 
 	const hasText = cvText.trim().length > 0;
 	const characterCount = cvText.length;
 
-	if (parsedResume) {
+	if (parsedResume && draftResume) {
 		return (
 			<Card className={className}>
 				<CardHeader>
@@ -149,16 +229,69 @@ export function CvUpload({ onUpload, className }: CvUploadProps) {
 						</Button>
 					</div>
 					<CardDescription>
-						Review your resume data below and confirm to continue.
+						Review and edit your resume data below, then confirm to continue.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<ResumePreview resume={parsedResume} />
+					{isEditing ? (
+						<div className="max-h-[32rem] overflow-y-auto space-y-6 pr-2">
+							<PersonalInfoForm
+								initialData={draftResume.personalInfo}
+								onChange={handlePersonalInfoChange}
+							/>
+							<Separator />
+							<ExperienceForm
+								initialData={draftResume.experience}
+								onChange={handleExperienceChange}
+							/>
+							<Separator />
+							<EducationForm
+								initialData={draftResume.education}
+								onChange={handleEducationChange}
+							/>
+							<Separator />
+							<SkillsForm
+								initialData={draftResume.skills}
+								onChange={handleSkillsChange}
+							/>
+							<Separator />
+							<LanguagesForm
+								initialData={draftResume.languages}
+								onChange={handleLanguagesChange}
+							/>
+							<Separator />
+							<CertificationsForm
+								initialData={draftResume.certifications}
+								onChange={handleCertificationsChange}
+							/>
+							<Separator />
+							<ProjectsForm
+								initialData={draftResume.projects}
+								onChange={handleProjectsChange}
+							/>
+							<Separator />
+							<OpenSourceForm
+								initialData={draftResume.openSource}
+								onChange={handleOpenSourceChange}
+							/>
+						</div>
+					) : (
+						<ResumePreview resume={draftResume} />
+					)}
+
 					<div className="flex justify-end gap-2">
 						<Button variant="outline" onClick={handleReset}>
 							Parse Another Resume
 						</Button>
-						<Button onClick={handleConfirm}>Use This Resume</Button>
+						<Button
+							variant="outline"
+							onClick={() => setIsEditing((prev) => !prev)}
+						>
+							{isEditing ? "Preview" : "Edit Fields"}
+						</Button>
+						<Button onClick={handleConfirm} disabled={!isPersonalInfoValid}>
+							Use This Resume
+						</Button>
 					</div>
 				</CardContent>
 			</Card>
