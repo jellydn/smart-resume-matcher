@@ -9,10 +9,22 @@ import {
 import type {
 	AISettings,
 	BioGenerationResult,
+	BioLength,
 	BioResult,
 	Resume,
 } from "~/lib/types";
 import { bioResultSchema } from "~/lib/types";
+
+export interface BioGenerationOptions {
+	length?: BioLength;
+	prompt?: string;
+}
+
+const LENGTH_GUIDANCE: Record<BioLength, string> = {
+	short: "Keep each bio to 1-2 sentences.",
+	medium: "Keep each bio to 2-3 sentences.",
+	long: "Keep each bio to 3-5 sentences.",
+};
 
 const SYSTEM_PROMPT = `You are an expert personal branding writer. Your job is to turn a person's profile data into ready-to-use bio options for platforms like LinkedIn, GitHub, personal websites, and conference speaker pages.
 
@@ -36,16 +48,30 @@ Return ONLY valid JSON with this exact structure (no markdown fences, no comment
     "Second professional bio option"
   ]
 }`;
-
-function createUserPrompt(resume: Resume): string {
+export function createUserPrompt(
+	resume: Resume,
+	options: BioGenerationOptions = {},
+): string {
 	const profileText = JSON.stringify(resume, null, 2);
+	const lines = [
+		"Generate four ready-to-use profile bios from this profile data.",
+		"",
+		"PROFILE DATA:",
+		profileText,
+		"",
+		"Write 2 fun & casual bios (first person) and 2 professional bios (third person). Use only the information above — never invent anything.",
+	];
 
-	return `Generate four ready-to-use profile bios from this profile data.
+	lines.push(LENGTH_GUIDANCE[options.length ?? "medium"]);
 
-PROFILE DATA:
-${profileText}
+	const customPrompt = options.prompt?.trim();
+	if (customPrompt) {
+		lines.push(
+			`Additional instructions from the user: "${customPrompt}". Apply them to all four bios whenever they do not conflict with the rules above.`,
+		);
+	}
 
-Write 2 fun & casual bios (first person) and 2 professional bios (third person). Use only the information above — never invent anything.`;
+	return lines.join("\n");
 }
 
 function extractJsonObject(content: string): string | null {
@@ -126,7 +152,7 @@ function parseOptionsText(content: string): BioResult | null {
 	return result;
 }
 
-function parseAIResponse(content: string): BioResult | null {
+export function parseAIResponse(content: string): BioResult | null {
 	const jsonStr = extractJsonObject(content);
 	if (jsonStr) {
 		try {
@@ -140,10 +166,10 @@ function parseAIResponse(content: string): BioResult | null {
 
 	return parseOptionsText(content);
 }
-
 export async function generateBios(
 	resume: Resume,
 	settings: AISettings,
+	options: BioGenerationOptions = {},
 ): Promise<BioGenerationResult> {
 	if (!resume.personalInfo.name) {
 		return { success: false, error: "Profile is missing personal information" };
@@ -160,8 +186,7 @@ export async function generateBios(
 			};
 		}
 	}
-
-	const userPrompt = createUserPrompt(resume);
+	const userPrompt = createUserPrompt(resume, options);
 
 	const messages: ChatMessage[] = [
 		{ role: "system", content: SYSTEM_PROMPT },

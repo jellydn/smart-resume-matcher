@@ -339,7 +339,33 @@ export const bioResultSchema = z.object({
 	professional: z.array(z.string()).length(2),
 });
 
-export type BioResult = z.infer<typeof bioResultSchema>;
+export type BioResult = z.infer<typeof bioResultSchema>; // How detailed each generated bio should be
+export const bioLengthSchema = z.enum(["short", "medium", "long"]);
+
+export type BioLength = z.infer<typeof bioLengthSchema>;
+
+export const bioLengthLabels: Record<BioLength, string> = {
+	short: "Short (1-2 sentences)",
+	medium: "Medium (2-3 sentences)",
+	long: "Long (3-5 sentences)",
+};
+
+// Bio Generator History Schema (past generated results)
+export const bioHistoryEntrySchema = z.object({
+	id: z.string(),
+	createdAt: z.string(),
+	result: bioResultSchema,
+	prompt: z.string().optional(),
+	length: bioLengthSchema.optional(),
+});
+
+export type BioHistoryEntry = z.infer<typeof bioHistoryEntrySchema>;
+
+export const bioHistorySchema = z.array(bioHistoryEntrySchema);
+
+export type BioHistory = z.infer<typeof bioHistorySchema>;
+
+export const MAX_BIO_HISTORY_ENTRIES = 10;
 
 // Bio Generator Service Result
 export interface BioGenerationResult {

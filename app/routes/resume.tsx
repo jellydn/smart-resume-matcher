@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { CertificationsForm } from "~/components/resume/certifications-form";
+import { CvUpload } from "~/components/resume/cv-upload";
 import { EducationForm } from "~/components/resume/education-form";
 import { ExperienceForm } from "~/components/resume/experience-form";
 import { FormWizard, type WizardStep } from "~/components/resume/form-wizard";
@@ -63,6 +64,7 @@ export default function ResumePage() {
 	const { isAuthenticated } = useSession();
 	const {
 		resume: storedResume,
+		setResume: setStoredResume,
 		updateResumeField,
 		clearResume,
 		isLoaded,
@@ -112,6 +114,7 @@ export default function ResumePage() {
 
 	const handleUpload = (uploadedResume: Resume) => {
 		setResume(uploadedResume);
+		setStoredResume(uploadedResume);
 	};
 
 	const handlePersonalInfoChange = useCallback(
@@ -482,7 +485,7 @@ export default function ResumePage() {
 					</div>
 				) : (
 					<Tabs defaultValue="form" className="w-full">
-						<TabsList className="grid w-full grid-cols-2">
+						<TabsList className="grid w-full grid-cols-3">
 							<TabsTrigger value="form">
 								<Edit className="h-4 w-4 mr-2" />
 								Fill Form
@@ -490,6 +493,10 @@ export default function ResumePage() {
 							<TabsTrigger value="upload">
 								<Upload className="h-4 w-4 mr-2" />
 								Upload JSON
+							</TabsTrigger>
+							<TabsTrigger value="cv">
+								<FileText className="h-4 w-4 mr-2" />
+								Upload CV
 							</TabsTrigger>
 						</TabsList>
 						<TabsContent value="form" className="mt-6">
@@ -501,6 +508,9 @@ export default function ResumePage() {
 						</TabsContent>
 						<TabsContent value="upload" className="mt-6">
 							<JsonUpload onUpload={handleUpload} />
+						</TabsContent>
+						<TabsContent value="cv" className="mt-6">
+							<CvUpload onUpload={handleUpload} />
 						</TabsContent>
 					</Tabs>
 				)}

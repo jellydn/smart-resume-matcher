@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
+import { BioHistoryPanel } from "~/components/bio/bio-history-panel";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,11 +19,22 @@ import {
 	CardHeader,
 	CardTitle,
 } from "~/components/ui/card";
+import { Label } from "~/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Textarea } from "~/components/ui/textarea";
 import { useAISettings } from "~/hooks/use-ai-settings";
+import { useBioHistory } from "~/hooks/use-bio-history";
 import { useResumeStorage } from "~/hooks/use-resume-storage";
 import { generateBios } from "~/lib/bio-generator";
-import type { BioResult } from "~/lib/types";
+import type { BioHistoryEntry, BioLength, BioResult } from "~/lib/types";
+import { bioLengthLabels } from "~/lib/types";
 import type { Route } from "./+types/bio";
 
 export function meta({}: Route.MetaArgs) {
@@ -37,11 +49,12 @@ export function meta({}: Route.MetaArgs) {
 }
 
 type BioTone = "funCasual" | "professional";
-
 const toneLabels: Record<BioTone, string> = {
 	funCasual: "Fun & Casual",
 	professional: "Professional",
 };
+
+const MAX_PROMPT_LENGTH = 500;
 
 async function copyToClipboard(text: string): Promise<boolean> {
 	try {
@@ -71,11 +84,20 @@ async function copyToClipboard(text: string): Promise<boolean> {
 export default function BioPage() {
 	const { resume, isLoaded: isResumeLoaded } = useResumeStorage();
 	const { settings, isLoaded: isSettingsLoaded } = useAISettings();
+	const {
+		history,
+		addEntry,
+		deleteEntry,
+		isLoaded: isHistoryLoaded,
+	} = useBioHistory();
+	const resultsRef = useRef<HTMLDivElement>(null);
 
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generationError, setGenerationError] = useState("");
 	const [result, setResult] = useState<BioResult | null>(null);
 	const [copiedKey, setCopiedKey] = useState<string | null>(null);
+	const [customPrompt, setCustomPrompt] = useState("");
+	const [length, setLength] = useState<BioLength>("medium");
 	const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
@@ -95,16 +117,34 @@ export default function BioPage() {
 		setGenerationError("");
 		setResult(null);
 
-		const response = await generateBios(resume, settings);
+		const response = await generateBios(resume, settings, {
+			length,
+			prompt: customPrompt,
+		});
 
 		if (response.success && response.result) {
 			setResult(response.result);
+			addEntry(response.result, { length, prompt: customPrompt });
 		} else {
 			setGenerationError(response.error || "Failed to generate bios");
 		}
 
 		setIsGenerating(false);
-	}, [resume, settings, isSettingsLoaded, hasProfile]);
+	}, [
+		resume,
+		settings,
+		isSettingsLoaded,
+		hasProfile,
+		length,
+		customPrompt,
+		addEntry,
+	]);
+
+	const handleSelectHistoryEntry = useCallback((entry: BioHistoryEntry) => {
+		setResult(entry.result);
+		setGenerationError("");
+		resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+	}, []);
 
 	const handleCopy = useCallback(
 		async (tone: BioTone, index: number) => {
@@ -164,6 +204,14 @@ export default function BioPage() {
 						GitHub, and more — in fun & casual or professional tones.
 					</p>
 				</div>
+
+				{isHistoryLoaded && history.length > 0 && (
+					<BioHistoryPanel
+						history={history}
+						onSelectEntry={handleSelectHistoryEntry}
+						onDeleteEntry={deleteEntry}
+					/>
+				)}
 
 				{isResumeLoaded && !hasProfile && (
 					<Alert>
@@ -232,6 +280,68 @@ export default function BioPage() {
 					</CardContent>
 				</Card>
 
+				<Card>
+					<CardHeader>
+						<CardTitle>Customize Your Bios</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<div className="space-y-2">
+							<div className="flex items-center justify-between">
+								<Label htmlFor="bio-prompt">
+									Extra guidance{" "}
+									<span className="text-muted-foreground">(optional)</span>
+								</Label>
+								<span
+									className={`text-xs ${
+										customPrompt.length > MAX_PROMPT_LENGTH * 0.9
+											? "text-destructive"
+											: "text-muted-foreground"
+									}`}
+								>
+									{customPrompt.length} / {MAX_PROMPT_LENGTH}
+								</span>
+							</div>
+							<Textarea
+								id="bio-prompt"
+								placeholder="e.g., mention my open-source work, or highlight my interest in AI"
+								value={customPrompt}
+								onChange={(e) => {
+									if (e.target.value.length <= MAX_PROMPT_LENGTH) {
+										setCustomPrompt(e.target.value);
+									}
+								}}
+								className="min-h-[80px] resize-y"
+								disabled={isGenerating}
+							/>
+						</div>
+
+						<div className="space-y-2">
+							<Label htmlFor="bio-length">Length</Label>
+							<Select
+								value={length}
+								onValueChange={(value) => setLength(value as BioLength)}
+								disabled={isGenerating}
+							>
+								<SelectTrigger id="bio-length" className="w-full sm:w-[260px]">
+									<SelectValue placeholder="Select a length" />
+								</SelectTrigger>
+								<SelectContent>
+									{(Object.keys(bioLengthLabels) as BioLength[]).map(
+										(bioLength) => (
+											<SelectItem key={bioLength} value={bioLength}>
+												{bioLengthLabels[bioLength]}
+											</SelectItem>
+										),
+									)}
+								</SelectContent>
+							</Select>
+							<p className="text-sm text-muted-foreground">
+								How detailed each bio should be.
+							</p>
+						</div>
+					</CardContent>
+				</Card>
+
 				{generationError && (
 					<Alert variant="destructive">
 						<AlertCircle className="h-4 w-4" />
@@ -240,73 +350,76 @@ export default function BioPage() {
 					</Alert>
 				)}
 
-				{result && (
-					<Tabs defaultValue="funCasual">
-						<TabsList className="grid w-full grid-cols-2">
+				<div ref={resultsRef} className="space-y-6 scroll-mt-24">
+					{result && (
+						<Tabs defaultValue="funCasual">
+							<TabsList className="grid w-full grid-cols-2">
+								{(["funCasual", "professional"] as BioTone[]).map((tone) => (
+									<TabsTrigger key={tone} value={tone}>
+										{toneLabels[tone]}
+									</TabsTrigger>
+								))}
+							</TabsList>
 							{(["funCasual", "professional"] as BioTone[]).map((tone) => (
-								<TabsTrigger key={tone} value={tone}>
-									{toneLabels[tone]}
-								</TabsTrigger>
+								<TabsContent key={tone} value={tone} className="mt-6">
+									<div className="space-y-4">
+										{result[tone].map((bio, index) => {
+											const key = `${tone}-${index}`;
+											const isCopied = copiedKey === key;
+											return (
+												<Card key={key}>
+													<CardHeader>
+														<CardTitle className="text-sm text-muted-foreground">
+															Option {index + 1}
+														</CardTitle>
+														<CardAction>
+															<Button
+																variant="outline"
+																size="sm"
+																onClick={() => handleCopy(tone, index)}
+															>
+																{isCopied ? (
+																	<>
+																		<Check className="h-4 w-4 mr-1" />
+																		Copied!
+																	</>
+																) : (
+																	<>
+																		<Copy className="h-4 w-4 mr-1" />
+																		Copy
+																	</>
+																)}
+															</Button>
+														</CardAction>
+													</CardHeader>
+													<CardContent>
+														<p className="text-sm leading-relaxed text-muted-foreground">
+															{bio}
+														</p>
+													</CardContent>
+												</Card>
+											);
+										})}
+									</div>
+								</TabsContent>
 							))}
-						</TabsList>
-						{(["funCasual", "professional"] as BioTone[]).map((tone) => (
-							<TabsContent key={tone} value={tone} className="mt-6">
-								<div className="space-y-4">
-									{result[tone].map((bio, index) => {
-										const key = `${tone}-${index}`;
-										const isCopied = copiedKey === key;
-										return (
-											<Card key={key}>
-												<CardHeader>
-													<CardTitle className="text-sm text-muted-foreground">
-														Option {index + 1}
-													</CardTitle>
-													<CardAction>
-														<Button
-															variant="outline"
-															size="sm"
-															onClick={() => handleCopy(tone, index)}
-														>
-															{isCopied ? (
-																<>
-																	<Check className="h-4 w-4 mr-1" />
-																	Copied!
-																</>
-															) : (
-																<>
-																	<Copy className="h-4 w-4 mr-1" />
-																	Copy
-																</>
-															)}
-														</Button>
-													</CardAction>
-												</CardHeader>
-												<CardContent>
-													<p className="text-sm leading-relaxed text-muted-foreground">
-														{bio}
-													</p>
-												</CardContent>
-											</Card>
-										);
-									})}
-								</div>
-							</TabsContent>
-						))}
-					</Tabs>
-				)}
+						</Tabs>
+					)}
 
-				{result && (
-					<div className="flex justify-center">
-						<Button
-							variant="outline"
-							onClick={handleGenerate}
-							disabled={isGenerating}
-						>
-							<Sparkles className="h-4 w-4 mr-2" />
-							Regenerate
-						</Button>
-					</div>
-				)}
+					{result && (
+						<div className="flex justify-center">
+							<Button
+								variant="outline"
+								onClick={handleGenerate}
+								disabled={isGenerating}
+							>
+								{" "}
+								<Sparkles className="h-4 w-4 mr-2" />
+								Regenerate
+							</Button>
+						</div>
+					)}
+				</div>
 			</div>
 		</div>
 	);
