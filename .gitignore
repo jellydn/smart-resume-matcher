@@ -11,3 +11,6 @@
 .claude/settings.local.json
 /.freebuff
 /dist
+
+# Test coverage output
+/coverage/

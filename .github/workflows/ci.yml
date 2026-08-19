@@ -46,6 +46,86 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck
 
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage
+      - name: Report coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs')
+            const summary = JSON.parse(
+              fs.readFileSync('coverage/coverage-summary.json', 'utf8'),
+            )
+            const total = summary.total
+            const pct = (metric) => {
+              const value = total[metric]
+              return `${value.pct.toFixed(2)}% (${value.covered}/${value.total})`
+            }
+            const body = [
+              '## 📊 Test coverage',
+              '',
+              '| Metric | Coverage |',
+              '| --- | --- |',
+              `| Statements | ${pct('statements')} |`,
+              `| Branches | ${pct('branches')} |`,
+              `| Functions | ${pct('functions')} |`,
+              `| Lines | ${pct('lines')} |`,
+              '<!-- coverage-comment -->',
+            ].join('\n')
+
+            // Posting is best-effort: PR tokens are read-only in some repos,
+            // so a 403 here must not fail the job. Coverage enforcement already
+            // happens in the `pnpm test:coverage` step above.
+            try {
+              const { owner, repo } = context.repo
+              const issueNumber = context.issue.number
+
+              const { data: comments } = await github.rest.issues.listComments({
+                owner,
+                repo,
+                issue_number: issueNumber,
+              })
+              const existing = comments.find(
+                (comment) =>
+                  comment.body && comment.body.includes('<!-- coverage-comment -->'),
+              )
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                  body,
+                })
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body,
+                })
+              }
+            } catch (error) {
+              core.warning(
+                `Could not post coverage comment: ${error instanceof Error ? error.message : String(error)}`,
+              )
+            }
+
   build:
     name: Build
     runs-on: ubuntu-latest

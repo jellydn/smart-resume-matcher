@@ -48,6 +48,14 @@ export function Header() {
 					<FileText className="h-6 w-6" />
 					<span className="font-bold">Resume Matcher</span>
 				</Link>
+				<nav className="ml-6 hidden items-center gap-4 sm:flex">
+					<Link
+						to="/bio"
+						className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+					>
+						Bio Generator
+					</Link>
+				</nav>
 				<div className="flex flex-1 items-center justify-end space-x-2">
 					{aiSettingsLoaded && (
 						<AISettingsDialog

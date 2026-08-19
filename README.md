@@ -28,6 +28,7 @@ Job hunting is time-consuming, and tailoring resumes for each application is ted
 | 📤 **Multiple Input Methods** Upload JSON file or use comprehensive web form for personal info, experience, education, skills, languages, certifications, projects, and open source contributions. | 🤖 **Flexible AI Providers** Support for OpenRouter, OpenAI, Anthropic Claude, WebLLM (browser-based, free), and Ollama (local).                          |
 | ✨ **Smart Tailoring** AI analyzes job descriptions, suggests reworded bullet points, recommends skills to emphasize, and shows match score—without fabricating experience.                        | 👁️ **Side-by-Side Comparison** View original vs tailored resume, accept/reject individual suggestions, manual edit capability, real-time preview updates. |
 | 📄 **Professional Export** Download as formatted PDF or DOCX with clean template, filename includes job title/company.                                                                             | 💾 **Privacy-First Storage** Works fully without login, localStorage persistence, API keys stored locally with warnings, optional cloud sync.             |
+| 📝 **Bio Generator** Turn your profile into ready-to-use LinkedIn/GitHub bios — fun & casual or professional — with length and tone controls plus a saved history.                            | 📤 **CV Upload & Paste** Upload a PDF, DOCX, TXT, or MD resume (or paste text); AI parses it into a structured, editable profile.                        |
 
 ## 🚀 Quick Start
 
@@ -66,6 +67,12 @@ Job hunting is time-consuming, and tailoring resumes for each application is ted
 - Fill out sections: Personal Info, Experience, Education, Skills, Languages, Certifications, Projects, Open Source
 - Save draft to localStorage as you work
 
+**Option C: Upload CV or Paste Resume**
+
+- Upload a PDF, DOCX, TXT, or MD file, or paste your resume text
+- AI extracts and parses it into a structured profile
+- Review and edit the parsed fields, then confirm to save
+
 ### 2. Paste Job Description
 
 - Paste the LinkedIn job URL or job description text
@@ -96,6 +103,14 @@ Click "Test Connection" to verify your API key works.
 - Click "Download PDF" or "Download DOCX"
 - File is named with job title/company for easy organization
 
+### 6. Generate Your Bio
+
+- Open the **Bio Generator** page (`/bio`)
+- Import a resume there directly, or use your saved profile
+- Pick a length (Short / Medium / Long) and optional custom guidance, then generate
+- Choose a fun & casual or professional option and copy it to the clipboard
+- Past results are saved to a history panel for later reuse
+
 ## ⚙️ Configuration
 
 ### Environment Variables
@@ -113,12 +128,12 @@ Click "Test Connection" to verify your API key works.
 
 ### Local Storage Keys
 
-| Key           | Description              |
-| ------------- | ------------------------ |
-| `resume-data` | User's resume data       |
-| `ai-provider` | Selected AI provider     |
-| `api-keys`    | Encrypted API keys       |
-| `job-history` | Last 10 job descriptions |
+| Key                            | Description               |
+| ------------------------------ | ------------------------- |
+| `resume-matcher-resume-data`   | User's resume data        |
+| `resume-matcher-ai-settings`   | AI provider and API keys  |
+| `resume-matcher-job-history`   | Last 10 job descriptions  |
+| `resume-matcher-bio-history`   | Last 10 generated bios    |
 
 ## 📄 Resume JSON Schema
 
@@ -209,12 +224,32 @@ pnpm run dev
 # Type check
 pnpm run typecheck
 
+# Run tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:coverage
+
 # Build for production
 pnpm run build
 
 # Run linter
 pnpm run lint
 ```
+
+### Testing & Coverage
+
+Tests use [Vitest](https://vitest.dev/). Unit tests cover the bio generator and resume parser, and the CV upload edit flow is covered with Testing Library + jsdom.
+
+Coverage thresholds are enforced in CI (the `test` job runs `pnpm test:coverage`) and are scoped to the modules that actually have tests, via `coverage.include` in `vitest.config.ts`. To keep them honest as coverage grows:
+
+1. When a module gains its first test file, add its path to `coverage.include`.
+2. Run `pnpm test:coverage` and read the `All files` row.
+3. Raise the matching threshold (statements/lines/functions/branches) to that number, rounded down to the nearest 5.
+
+This keeps thresholds rising with coverage while leaving a few points of headroom for minor V8/Node-version variance.
+
+The same CI job reads the `json-summary` report and attempts to post (best-effort) a **Test coverage** comment on each pull request, so the numbers are visible without opening the CI logs.
 
 ### Database
 

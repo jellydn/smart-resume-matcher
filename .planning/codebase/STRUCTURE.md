@@ -1,137 +1,128 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-08-04
+**Analysis Date:** 2026-08-19
 
 ## Directory Layout
 
 ```
 smart-resume-matcher/
-├── app/                    # All application source code
-│   ├── components/         # React UI components
-│   │   ├── ui/             # shadcn/ui primitives (button, card, dialog, ...)
-│   │   ├── resume/         # Resume-related components (forms, previews, comparison)
-│   │   ├── job/            # Job description components
-│   │   ├── layout/         # Header, page chrome
-│   │   └── *.tsx           # Theme provider, indicators, settings dialog
-│   ├── hooks/              # Custom React hooks (storage, auth, ai-settings, ...)
-│   ├── lib/                # Domain logic, AI integration, exports, auth, env
-│   ├── db/                 # Drizzle client + dialect-specific schema
-│   ├── routes/             # Route modules (home, resume, job, login, signup, api/*)
-│   ├── root.tsx            # Root layout, ErrorBoundary
-│   ├── routes.ts           # Route config
-│   ├── app.css             # Tailwind v4 entry + theme tokens
-│   └── welcome/            # Welcome page (legacy/example)
-├── drizzle/                # Generated migration files (sqlite + postgres out dirs)
-├── public/                 # Static assets (logo, favicon)
-├── scripts/ralph/          # Ralph agent automation scripts
-├── tasks/                  # Sample resumes + PRD
-├── .github/workflows/      # CI (biome, typecheck, build)
-└── *.config.ts|json        # vite, drizzle, react-router, biome, tsconfig, components.json
+├── app/                     # Application source
+│   ├── routes.ts            # Route registry
+│   ├── root.tsx             # Document shell + providers
+│   ├── routes/              # Page/API route modules
+│   ├── components/          # UI + feature components
+│   │   ├── ui/              # shadcn/ui primitives
+│   │   ├── resume/          # Resume forms, upload, preview
+│   │   ├── job/             # Job description panels
+│   │   ├── bio/             # Bio history panel
+│   │   └── layout/          # Header
+│   ├── hooks/               # State + localStorage hooks
+│   ├── lib/                 # Services, AI, parsing, export
+│   ├── db/                  # Drizzle schema (sqlite/postgres)
+│   ├── types/               # Ambient type declarations
+│   └── welcome/             # Landing assets
+├── doc/adr/                 # Architecture decision records
+├── .planning/codebase/      # This codebase map
+├── .github/workflows/       # CI + deploy
+├── public/                  # Static assets (favicon, logos)
+├── data/                    # Local SQLite DB (gitignored)
+├── drizzle/                 # Generated migrations
+├── scripts/                 # Build/deploy scripts
+├── vite.config.ts           # Vite + PWA config
+├── react-router.config.ts   # SSR config
+├── tsconfig.json            # TypeScript config (strict, ~ alias)
+├── biome.json               # Lint/format config
+├── drizzle.config.ts        # Dialect-conditional DB config
+├── pnpm-workspace.yaml      # pnpm settings + overrides
+└── package.json             # Scripts + dependencies
 ```
 
 ## Directory Purposes
 
-**`app/routes/`:**
-- Purpose: URL→component/module mapping (config-based routing)
-- Contains: 7 route modules + auto-generated `+types/`
-- Key files: `resume.tsx`, `job.tsx`, `api.resume.tsx`, `api.auth.$.tsx`
+**app/routes:**
+- Purpose: page + API entry points
+- Contains: route modules (`home.tsx`, `resume.tsx`, `bio.tsx`, `job.tsx`, `login.tsx`, `signup.tsx`, `api.auth.$.tsx`, `api.resume.tsx`)
+- Key files: `app/routes.ts` (registry)
 
-**`app/components/`:**
-- Purpose: Reusable UI
-- Contains: 13 shadcn primitives, 8 resume form/preview components, job panels, layout
-- Key files: `resume/form-wizard.tsx`, `resume/resume-comparison-view.tsx`, `resume/tailored-resume-preview.tsx`
+**app/components:**
+- Purpose: reusable UI + feature sections
+- Contains: shadcn/ui primitives, `resume/` (8 section forms, `cv-upload`, `resume-preview`), `bio/`, `job/`, `layout/`
+- Key files: `cv-upload.tsx`, `form-wizard.tsx`, `bio-history-panel.tsx`
 
-**`app/hooks/`:**
-- Purpose: Stateful behavior
-- Contains: 5 hooks
-- Key files: `use-resume-storage.ts` (localStorage + cloud sync), `use-ai-settings.ts`
+**app/hooks:**
+- Purpose: state + persistence
+- Contains: `use-resume-storage.ts`, `use-job-history.ts`, `use-bio-history.ts`, `use-ai-settings.ts`, `use-session.ts`, `use-network-status.ts`
 
-**`app/lib/`:**
-- Purpose: Domain model, AI integration, file export, auth, env validation
-- Contains: `types.ts` (all zod schemas), AI service functions, export utilities
-- Key files: `types.ts`, `resume-tailor.ts`, `job-parser.ts`, `auth.server.ts`
+**app/lib:**
+- Purpose: domain services
+- Contains: `ai-chat.ts`, `ai-connection.ts`, `bio-generator.ts`, `job-parser.ts`, `resume-parser.ts`, `resume-tailor.ts`, `cv-extract.ts`, `apply-suggestion.ts`, `export-*`, `auth.server.ts`, `auth-client.ts`, `env.ts`, `types.ts`, `utils.ts`
 
-**`app/db/`:**
-- Purpose: Data access layer
-- Contains: client (`index.ts`), legacy `schema.ts`, `schema/{index,sqlite,postgres}.ts`
-- Key files: `index.ts`, `schema/index.ts`
+**app/db:**
+- Purpose: Drizzle schema + dialect selection
+- Key files: `schema/index.ts` (barrel), `schema/sqlite.ts`, `schema/postgres.ts`
 
 ## Key File Locations
 
 **Entry Points:**
-- `app/root.tsx`: Root layout + ErrorBoundary
-- `app/routes.ts`: Route table
+- `app/routes.ts`: route registry
+- `app/root.tsx`: app shell
 
 **Configuration:**
-- `vite.config.ts`: Vite + Tailwind + PWA
-- `tsconfig.json`: strict TS, `~/*` path alias
-- `biome.json`: lint/format/import organization
-- `drizzle.config.ts`: DB dialect-aware config
-- `react-router.config.ts`: SSR flag
+- `vite.config.ts`, `react-router.config.ts`, `tsconfig.json`, `biome.json`, `drizzle.config.ts`, `pnpm-workspace.yaml`
 
 **Core Logic:**
-- `app/lib/types.ts`: Domain model (schemas + inferred types)
-- `app/lib/resume-tailor.ts` / `job-parser.ts`: AI orchestration
-- `app/lib/auth.server.ts` + `auth-client.ts`: Auth
-- `app/db/index.ts`: DB client selection
-- `app/routes/api.resume.tsx`: Resume cloud sync endpoint
+- `app/lib/types.ts`: all zod schemas + types
+- `app/lib/ai-chat.ts`: AI provider dispatch
+- `app/lib/resume-tailor.ts`: tailoring service
 
 **Testing:**
-- None (no test directory/files)
+- `app/lib/bio-generator.test.ts`, `app/lib/resume-parser.test.ts`, `app/components/resume/cv-upload.test.tsx`, `app/hooks/use-bio-history.test.ts`
+- `vitest.config.ts` (coverage config)
 
 ## Naming Conventions
 
 **Files:**
-- kebab-case for utilities/hooks (`use-resume-storage.ts`, `export-pdf.tsx`)
-- PascalCase for component files (`button.tsx` is kebab within `ui/`, but resume components like `form-wizard.tsx` follow kebab; see note below)
+- kebab-case for utilities/hooks/forms: `use-bio-history.ts`, `cv-extract.ts`, `personal-info-form.tsx`
+- shadcn/ui primitives kebab-case: `alert-dialog.tsx`
+- Route files kebab-case; API splats use `$.`: `api.auth.$.tsx`
 
 **Directories:**
-- Lowercase, semantic grouping (`components/resume/`, `components/ui/`)
-- Path alias `~/` maps to `app/`
-
-Note: There is mixed file naming in practice — `app/components/ui/*` files are kebab-case (`alert-dialog.tsx`), while the AGENTS.md convention documents kebab-case for utilities and PascalCase for components; `form-wizard.tsx` (kebab) is the current dominant pattern.
+- kebab-case feature dirs: `components/resume`, `components/bio`
 
 ## Where to Add New Code
 
-**New Feature (e.g., new resume section):**
-- Primary code: `app/components/resume/<name>-form.tsx` + wire into `app/routes/resume.tsx` wizard steps
-- Domain: add schema to `app/lib/types.ts`
-- Tests: none (no test setup)
-
-**New Route:**
-- Implementation: `app/routes/<name>.tsx` + register in `app/routes.ts`
-
-**New AI provider:**
-- Implementation: add `call*` function in `app/lib/resume-tailor.ts` + `job-parser.ts` + `ai-connection.ts`, extend `aiProviderSchema` + labels in `types.ts`
+**New Feature:**
+- Primary code: `app/routes/<feature>.tsx` + `app/lib/<feature>.ts` + `app/components/<feature>/`
+- Tests: co-located `<module>.test.ts(x)`
 
 **New Component/Module:**
-- Implementation: `app/components/<area>/`
+- Implementation: `app/components/<area>/<name>.tsx`
 
 **Utilities:**
-- Shared helpers: `app/lib/utils.ts` or new kebab-case file in `app/lib/`
+- Shared helpers: `app/lib/utils.ts` (or a new `app/lib/<name>.ts`)
 
 ## Special Directories
 
-**`drizzle/`:**
-- Purpose: Generated migration SQL + snapshots (`0000_cool_madelyne_pryor.sql`, `meta/`); `sqlite/` and `postgres/` subdirs for dialect-specific out
-- Generated: Yes (drizzle-kit)
-- Committed: Yes
-
-**`scripts/ralph/`:**
-- Purpose: Ralph autonomous-agent automation (progress, prompts, prd)
+**doc/adr:**
+- Purpose: architecture decision records
 - Generated: No
 - Committed: Yes
 
-**`tasks/`:**
-- Purpose: Sample resume JSONs and PRD used for testing/development
-- Generated: No
-- Committed: Yes
-
-**`.freebuff/`:**
-- Purpose: Freebuff desktop app data
+**data/ (SQLite):**
+- Purpose: local DB file
 - Generated: Yes
-- Committed: No (untracked)
+- Committed: No (gitignored)
+
+**drizzle/ (migrations):**
+- Purpose: generated SQL migrations
+- Generated: Yes
+- Committed: Yes
+
+**coverage/:**
+- Purpose: vitest coverage reports
+- Generated: Yes
+- Committed: No (gitignored)
 
 ---
 
-*Structure analysis: 2026-08-04*
+*Structure analysis: 2026-08-19*

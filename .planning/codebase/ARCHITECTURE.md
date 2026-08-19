@@ -1,135 +1,113 @@
 # Architecture
 
-**Analysis Date:** 2026-08-04
+**Analysis Date:** 2026-08-19
 
 ## Pattern Overview
 
-**Overall:** React Router v7 full-stack SSR application — single TypeScript codebase serving both server (loaders/actions, auth, db) and client (interactive resume forms, AI calls). Feature-route + layered-lib structure with a central validated domain model.
+**Overall:** React Router v7 full-stack app (SSR) with a thin client-heavy service layer.
 
 **Key Characteristics:**
-- Config-based routing (`app/routes.ts`) with route modules exporting `loader`, `action`, `meta`, and default component
-- Zod schemas in `app/lib/types.ts` are the single source of truth for domain types; everything (forms, storage, AI responses) validates against them
-- Client-first UX: resume data and AI settings persist to localStorage; optional cloud sync when authenticated
-- AI orchestration runs in the browser (provider API keys stored locally, never sent to the server)
-- Database layer is dialect-aware (SQLite local / Postgres production) behind one `db` export
+- Route modules as entry points (`app/routes.ts` → `app/routes/*.tsx`)
+- Zod schemas as the single source of truth for all domain shapes (`app/lib/types.ts`)
+- "Result envelope" pattern for AI/services: `{ success, result?/resume?/requirements?, error? }`
+- Privacy-first: resume data and AI keys live in localStorage; AI calls are made client-side
+- Dialect-conditional DB layer (SQLite/PostgreSQL via one schema API)
 
 ## Layers
 
-**Routes (pages):**
-- Purpose: Page components + data loading/mutation for each URL
-- Location: `app/routes/`
-- Contains: `home.tsx`, `resume.tsx`, `job.tsx`, `login.tsx`, `signup.tsx`, `api.resume.tsx`, `api.auth.$.tsx`
-- Depends on: hooks, lib, components
-- Used by: React Router (mapped in `app/routes.ts`)
+**Routes:**
+- Purpose: page/API entry points, orchestration, user interaction
+- Location: `app/routes.ts`, `app/routes/*.tsx`
+- Contains: pages (`home`, `resume`, `bio`, `job`, `login`, `signup`), API handlers (`api.auth.$.tsx`, `api.resume.tsx`)
+- Depends on: components, hooks, lib
+- Used by: React Router server/renderer
 
 **Components:**
-- Purpose: Reusable UI — shadcn/ui primitives, resume form sections, job/requirements displays, layout chrome
-- Location: `app/components/` (subdirs `ui/`, `resume/`, `job/`, `layout/`)
-- Contains: FormWizard, ResumeComparisonView, TailoredResumePreview, Header, JsonUpload, etc.
-- Depends on: `~/lib`, `~/hooks`, `~/components/ui`
-- Used by: route modules
+- Purpose: reusable UI + feature sections
+- Location: `app/components/{ui,resume,job,bio,layout}/`
+- Contains: shadcn/ui primitives, form sections, panels, upload/preview components
+- Depends on: lib (types/utils), hooks
 
 **Hooks:**
-- Purpose: Encapsulate stateful behavior — storage, sync, auth session, network status
+- Purpose: state + browser persistence concerns
 - Location: `app/hooks/`
-- Contains: `use-resume-storage.ts`, `use-ai-settings.ts`, `use-job-history.ts`, `use-session.ts`, `use-network-status.ts`
-- Depends on: `~/lib`, better-auth client
-- Used by: route modules and components
+- Contains: `use-resume-storage`, `use-job-history`, `use-bio-history`, `use-ai-settings`, `use-session`, `use-network-status`
+- Depends on: lib (types)
 
-**Lib (domain + integration):**
-- Purpose: Domain model, AI providers, export, auth server, env validation
+**Lib (services):**
+- Purpose: domain logic, AI calls, parsing, export
 - Location: `app/lib/`
-- Contains: `types.ts` (schemas), `ai-connection.ts`, `job-parser.ts`, `resume-tailor.ts`, `export-pdf.tsx`, `export-docx.ts`, `export-json.ts`, `apply-suggestion.ts`, `auth.server.ts`, `auth-client.ts`, `env.ts`, `utils.ts`
-- Depends on: external SDKs (better-auth, docx, @react-pdf/renderer), zod
-- Used by: routes, components, hooks
+- Contains: `ai-chat.ts` (provider dispatch), `bio-generator.ts`, `job-parser.ts`, `resume-parser.ts`, `resume-tailor.ts`, `cv-extract.ts`, `export-{pdf,docx,json}`, `auth.server.ts`, `env.ts`
+- Depends on: types, ai-chat, db
 
 **DB:**
-- Purpose: Drizzle client + dialect-specific schema
-- Location: `app/db/` (`index.ts`, `schema.ts` legacy, `schema/{index,sqlite,postgres}.ts`)
-- Depends on: `~/lib/env`, drizzle-orm, better-sqlite3, postgres
-- Used by: `auth.server.ts`, `api.resume.tsx`
+- Purpose: persistence for auth/users
+- Location: `app/db/`, `app/db/schema/`
+- Contains: drizzle schema (sqlite/postgres), dialect-aware barrel
+- Depends on: `lib/env`
 
 ## Data Flow
 
-**Resume Tailoring (primary flow):**
-1. User fills/imports resume on `/resume` → `useResumeStorage` saves to localStorage (debounced cloud sync via `/api/resume` when logged in)
-2. User pastes job description on `/job` → `parseJobDescription` calls configured AI provider → validated `JobRequirements`
-3. `tailorResume` sends resume + requirements to AI → validated `TailoringResult` (matchScore, matchedSkills, suggestions)
-4. User accepts/rejects suggestions → `applySuggestionToResume`/`revertSuggestionFromResume` mutate resume state → persisted via storage hook
-5. Export via `exportResumeAsPdf`/`exportResumeAsDocx`/`exportResumeAsJson`
+**Resume import → tailoring/bio:**
+1. User fills wizard, uploads JSON, or uploads/pastes CV (`cv-upload.tsx`)
+2. CV text is extracted client-side (`cv-extract.ts`) and AI-parsed (`resume-parser.ts`) to a `Resume`
+3. Editable preview confirms → `use-resume-storage` persists to localStorage (`resume-matcher-resume-data`)
+4. `/job` tailors against a job description (`job-parser.ts` + `resume-tailor.ts`); `/bio` generates bios (`bio-generator.ts`)
 
-**Auth Flow:**
-1. Client `authClient` (better-auth react) hits `/api/auth/*` route
-2. Server `auth.server.ts` uses Drizzle adapter against `~/db` (users/sessions/accounts tables)
-3. `useSession` exposes session state; `api.resume.tsx` guards with `auth.api.getSession`
-
-**Cloud Resume Sync:**
-1. On mount with auth: `useResumeStorage` loads localStorage + `/api/resume`, picks newest by `updatedAt` timestamp
-2. On resume change: debounced (1s) POST to `/api/resume` → upsert `user_resumes` row
+**AI call shape:**
+1. Feature builds `ChatMessage[]` (or prompt strings)
+2. `ai-chat.ts` dispatches to the selected provider (`AISettings.provider`)
+3. Response is parsed (`extractJsonObject` + zod `safeParse`, with text fallbacks) and returned in a result envelope
 
 **State Management:**
-- Local component state + custom hooks (no global store; React Context only for theme)
-- Server state: no cache layer; loaders query DB directly per request
-- Persistence: localStorage (primary), Drizzle tables (secondary/cloud)
+- Local React state + localStorage hooks (no global store); `useResumeStorage`/`useJobHistory`/`useBioHistory` each own a storage key with zod validation on load
 
 ## Key Abstractions
 
-**Zod schemas (`app/lib/types.ts`):**
-- Purpose: Runtime-validated domain model (Resume, JobRequirements, TailoringResult, AISettings)
-- Examples: `resumeSchema`, `tailoringResultSchema`, `jobRequirementsSchema`
-- Pattern: schema-first; types inferred via `z.infer`; `empty*` defaults exported
+**AI provider layer (`ai-chat.ts`):**
+- Purpose: single dispatch surface for 5 providers
+- Examples: `callOpenRouter`, `callOpenAI`, `callAnthropic`, `callOllama`, `callBrowserAI`
+- Pattern: uniform `Promise<string>` return, provider-specific signatures
 
-**AI provider abstraction:**
-- Purpose: Uniform interface over OpenRouter/OpenAI/Anthropic/Ollama/Browser AI
-- Examples: `job-parser.ts`, `resume-tailor.ts`, `ai-connection.ts`
-- Pattern: per-provider `call*` functions + `switch (provider)` dispatch; result objects `{ success, result|error }`
+**Result envelopes:**
+- Purpose: errors never cross AI boundaries untyped
+- Examples: `BioGenerationResult`, `ResumeParserResult`, `JobParserResult`, `ResumeTailoringServiceResult`
+- Pattern: `{ success: boolean; result?/resume?/requirements?; error? }`
 
-**Result envelope:**
-- Purpose: Graceful failure handling in AI service functions
-- Examples: `JobParserResult`, `ResumeTailoringServiceResult`
-- Pattern: discriminated `success` boolean with either payload or error message (no thrown exceptions across service boundary)
-
-**`cn()` utility (`app/lib/utils.ts`):**
-- Purpose: Merge Tailwind classes with clsx + tailwind-merge
-- Pattern: standard shadcn/ui helper
+**Zod schemas (`types.ts`):**
+- Purpose: every domain type validated at trust boundaries
+- Examples: `resumeSchema`, `bioResultSchema`, `bioHistorySchema`, `tailoringResultSchema`, `jobRequirementsSchema`
 
 ## Entry Points
 
-**App entry:**
+**Route registry:**
+- Location: `app/routes.ts`
+- Triggers: HTTP requests
+- Responsibilities: maps URLs to route modules (index `/`, `resume`, `bio`, `job`, `login`, `signup`, `api/auth/*`, `api/resume`)
+
+**Root:**
 - Location: `app/root.tsx`
-- Triggers: any request to the app
-- Responsibilities: HTML shell, ThemeProvider, Header, OfflineIndicator, ErrorBoundary, `<Outlet/>`
-
-**Server build entry:**
-- Location: React Router conventions (`react-router.config.ts` ssr:true); routes from `app/routes.ts`
-
-**Auth route:**
-- Location: `app/routes/api.auth.$.tsx`
-- Triggers: any `/api/auth/*` request
-- Responsibilities: proxies better-auth server handlers
-
-**Resume sync API:**
-- Location: `app/routes/api.resume.tsx`
-- Triggers: GET (load) / POST (save) to `/api/resume`
-- Responsibilities: session guard, zod validation, upsert resume data
+- Triggers: every page
+- Responsibilities: document shell, theme/offline/sync providers, ErrorBoundary
 
 ## Error Handling
 
-**Strategy:** ErrorBoundary at root; try/catch in route loaders/actions; result-envelope in service layer; validation via zod `.safeParse` everywhere data crosses a trust boundary.
+**Strategy:** never throw across UI/AI boundaries; validate and degrade.
 
 **Patterns:**
-- `isRouteErrorResponse` in `app/root.tsx` ErrorBoundary (404 vs generic; stack only in dev)
-- `safeParse` + fallback defaults for storage loads and AI responses (`job-parser.ts`, `resume-tailor.ts`, `use-resume-storage.ts`)
-- JSON error responses with proper status codes (`api.resume.tsx`: 400/401/405/500)
+- Zod `.safeParse` at trust boundaries (localStorage load, AI response)
+- Services return `{ success: false, error }` instead of throwing
+- `console.warn` for recoverable parse fallbacks; `console.error` in catch blocks
+- Route ErrorBoundary (`isRouteErrorResponse`) with dev-only stack traces
 
 ## Cross-Cutting Concerns
 
-**Logging:** `console.error`/`console.warn` inline; no logging framework.
+**Logging:** `console` only (no library)
 
-**Validation:** Zod at every boundary — form schemas (`login.tsx`), resume schema (`api.resume.tsx`), AI outputs (`tailoringResultSchema`), env (`env.ts`).
+**Validation:** Zod schemas, normalization pass before parse (`resume-parser.ts`)
 
-**Authentication:** better-auth email/password; session guard on server API; client-aware rendering (optional cloud sync).
+**Authentication:** Better Auth server + client (`useSession`), email/password
 
 ---
 
-*Architecture analysis: 2026-08-04*
+*Architecture analysis: 2026-08-19*
