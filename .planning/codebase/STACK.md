@@ -1,90 +1,86 @@
 # Technology Stack
 
-**Analysis Date:** 2026-08-04
+**Analysis Date:** 2026-08-19
 
 ## Languages
 
 **Primary:**
-- TypeScript 5.9 - Application code (routes, components, lib, db)
-- CSS - Tailwind CSS v4 utilities and app-wide variables (`app/app.css`)
+- TypeScript ^7.0.0 - entire app (`app/**`), config, and tests
+- React 19.2.3 (JSX/TSX) - UI components and routes
 
 **Secondary:**
-- JSON - Resume data, PWA manifest, config files
+- CSS (Tailwind v4 directives + CSS variables) - `app/app.css`
+- YAML - `pnpm-workspace.yaml`, `.github/workflows/*.yml`
+- JSON - `package.json`, `app.json`, `components.json`
 
 ## Runtime
 
 **Environment:**
-- Node.js 22 (per CI setup)
-- React Router v7 server-side rendering (`react-router.config.ts`: `ssr: true`)
+- Node.js >= 22.22.0 (`package.json` engines)
 
 **Package Manager:**
-- pnpm 10.28.0
+- pnpm 11.20.0 (`packageManager` field)
 - Lockfile: present (`pnpm-lock.yaml`)
 
 ## Frameworks
 
 **Core:**
-- React 19.2 - UI framework
-- React Router 7.12 - Full-stack routing (config-based via `app/routes.ts`)
-- Tailwind CSS 4.1 + @tailwindcss/vite - Styling
-- Zod 4.3 - Runtime validation, single source of truth for types (`app/lib/types.ts`)
+- React Router v7 (8.3.0) - full-stack framework (SSR, loaders/actions, route modules)
+- Tailwind CSS v4 (via `@tailwindcss/vite`) - styling
+- shadcn/ui + Radix UI primitives - component system
+- Zod 4 - runtime schema validation
+- Drizzle ORM 0.45 - typed DB layer (SQLite + PostgreSQL dialects)
 
 **Testing:**
-- None configured (no test runner, no test files found)
+- Vitest 4.1 - test runner
+- @testing-library/react 16 - component/hook testing
+- jsdom 30 - DOM environment
+- @vitest/coverage-v8 4.1 - coverage
 
 **Build/Dev:**
-- Vite 7.1 + react-router dev plugin
-- Drizzle ORM 0.45 + drizzle-kit 0.31 - Database schema/migrations
-- vite-tsconfig-paths - Path alias resolution
-- vite-plugin-pwa - PWA/service worker support
-- Biome 2.3 - Linting, formatting, import organization
-- Husky 9 + lint-staged 16 - Git hooks
+- Vite 8 (via `@react-router/dev`) - bundling/dev server
+- vite-plugin-pwa - PWA/service worker
+- Biome 2.3 - lint + format
+- drizzle-kit - migrations/studio
 
 ## Key Dependencies
 
 **Critical:**
-- better-auth 1.4 - Authentication (email/password), Drizzle adapter
-- better-sqlite3 12.6 - Local SQLite driver (development database)
-- postgres 3.4 - postgres.js driver (Vercel production database)
-- @react-pdf/renderer 4.3 - PDF export
-- docx 9.5 - DOCX export
-- lucide-react - Icon set
-- shadcn/ui components (Radix UI primitives) - UI component library
+- `better-auth` - email/password auth with Drizzle adapter
+- `better-sqlite3` - local SQLite driver
+- `postgres` - PostgreSQL driver (production path)
+- `ai-chat.ts` providers call OpenRouter/OpenAI/Anthropic/Ollama/Browser AI directly via `fetch`
+- `pdfjs-dist` 4.10 - client-side PDF text extraction (pinned; see ADR-0001)
+- `mammoth` - client-side DOCX text extraction
+- `@react-pdf/renderer` + `docx` - PDF/DOCX resume export
 
 **Infrastructure:**
-- file-saver - Client-side file downloads
-- isbot - Bot detection for SSR
-- tailwind-merge + clsx - Class composition (`cn()` util)
-- class-variance-authority - Component variants
+- `@react-router/node` + `@react-router/serve` - server runtime
+- `husky` + `lint-staged` - git hooks
+- `drizzle-kit` - schema migrations
 
 ## Configuration
 
 **Environment:**
-- `app/lib/env.ts` validates process.env with zod at startup
-- `DATABASE_TYPE` = `sqlite` (default) or `postgres`
-- `DATABASE_PATH` = SQLite file path (default `./data/sqlite.db`)
-- `DATABASE_URL` = Postgres connection string (required when postgres)
-- VITE_* AI provider keys (OpenRouter, OpenAI, Anthropic) used client-side
-- `.env.example` documents all variables; `.env` is gitignored
+- `DATABASE_TYPE` (`sqlite` | `postgres`), `DATABASE_PATH`, `DATABASE_URL` - validated by `app/lib/env.ts`
+- `APP_URL`, `AUTH_TRUSTED_ORIGINS` - Better Auth trusted origins
+- `VITE_OPENROUTER_API_KEY` / `VITE_OPENAI_API_KEY` / `VITE_ANTHROPIC_API_KEY` - optional build-time AI key hints (keys are actually stored client-side in localStorage)
 
 **Build:**
-- `vite.config.ts` (plugins, PWA config)
-- `tsconfig.json` (strict mode, `~/*` → `./app/*` paths)
-- `biome.json` (tabs, double quotes, recommended rules)
-- `drizzle.config.ts` (dialect-aware schema + out dirs)
-- `react-router.config.ts` (SSR enabled)
-- `components.json` (shadcn/ui config)
+- `vite.config.ts` (PWA manifest, tailwind, react-router plugins)
+- `react-router.config.ts` (`ssr: true`)
+- `tsconfig.json` (strict, `~/` path alias)
+- `drizzle.config.ts` (dialect-conditional)
+- `biome.json` (tab indent, double quotes, recommended rules)
 
 ## Platform Requirements
 
 **Development:**
-- Node 22+, pnpm 10
-- `pnpm install` then `pnpm run dev` (http://localhost:5173)
+- Node >= 22.22.0, pnpm 11, `pnpm install` + `pnpm dev` (localhost:5173)
 
 **Production:**
-- Vercel (target per repo branches/env docs); SQLite locally, Postgres on Vercel
-- CI: GitHub Actions (`ci.yml`) - biome check, typecheck, build
+- Dokku (Dockerfile) or any Node host; SQLite by default, PostgreSQL supported
 
 ---
 
-*Stack analysis: 2026-08-04*
+*Stack analysis: 2026-08-19*

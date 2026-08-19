@@ -1,111 +1,150 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-08-04
+**Analysis Date:** 2026-08-19
 
 ## Test Framework
 
 **Runner:**
-- None — no test runner is installed or configured in `package.json`
+- Vitest 4.1
+- Config: `vitest.config.ts` (node environment, `~/` alias, v8 coverage)
 
 **Assertion Library:**
-- None
+- Vitest `expect` + `@testing-library/jest-dom` matchers
 
 **Run Commands:**
 ```bash
-pnpm run lint        # Biome static checks (ci.yml runs `biome ci .`)
-pnpm run typecheck   # react-router typegen + tsc (strict)
-pnpm run build       # Production build (catches build-time errors)
+pnpm test             # Run all tests once
+pnpm test:coverage    # Run with coverage (CI-enforced thresholds)
 ```
-
-These are the closest thing to a test suite; CI runs all three.
 
 ## Test File Organization
 
 **Location:**
-- No test files exist (`find` for `*.test.*` / `*.spec.*` returns nothing)
+- Co-located with the module under test (`app/lib/*.test.ts`, `app/components/resume/*.test.tsx`, `app/hooks/*.test.ts`)
 
 **Naming:**
-- N/A
+- `<module>.test.ts(x)`
 
 **Structure:**
 ```
-N/A
+app/lib/bio-generator.test.ts
+app/lib/resume-parser.test.ts
+app/components/resume/cv-upload.test.tsx
+app/hooks/use-bio-history.test.ts
 ```
 
 ## Test Structure
 
 **Suite Organization:**
 ```typescript
-// No test suites exist
+describe("parseAIResponse", () => {
+  describe("JSON responses", () => {
+    it("parses a plain JSON object", () => {
+      expect(parseAIResponse(JSON.stringify(validResult))).toEqual(validResult);
+    });
+  });
+});
 ```
 
 **Patterns:**
-- Validation is done at runtime via zod `.safeParse` rather than unit tests
-- `tasks/invalid-resume.json` and `tasks/sample-resume.json` serve as manual fixtures for JSON-upload validation
+- Setup: `beforeEach(() => localStorage.clear())` or `vi.resetAllMocks()`
+- Teardown: `@testing-library/react` auto-cleanup
+- Assertion: `toEqual` (deep), `toHaveLength`, `toBeNull`, `toHaveBeenCalledWith`
 
 ## Mocking
 
-**Framework:** N/A
+**Framework:** Vitest (`vi.mock`, `vi.mocked`, `vi.fn`)
 
 **Patterns:**
 ```typescript
-// AI provider calls are hard to mock — no test setup exists
+// Module mock (hoisted)
+vi.mock("~/lib/ai-chat", () => ({
+  callOpenRouter: vi.fn(),
+  callOpenAI: vi.fn(),
+  // ...
+}));
+
+// Per-test behavior
+vi.mocked(callOpenRouter).mockResolvedValue(JSON.stringify(bioResult));
+vi.mocked(callOpenRouter).mockRejectedValue(new Error("boom"));
+```
+
+```typescript
+// Component/hook: real PersonalInfoForm, other sections mocked
+vi.mock("~/components/resume/experience-form", () => ({ ExperienceForm: () => null }));
+const { result } = renderHook(() => useBioHistory());
+act(() => result.current.addEntry(makeResult("a")));
 ```
 
 **What to Mock:**
-- AI provider HTTP calls (OpenRouter/OpenAI/Anthropic/Ollama/Browser AI) — would be required to test `job-parser.ts` / `resume-tailor.ts`
+- AI provider calls (`~/lib/ai-chat`, `~/lib/resume-parser`)
+- Settings hooks (`~/hooks/use-ai-settings`)
+- Section forms that aren't the focus of the test
 
 **What NOT to Mock:**
-- Zod schema validation (it's pure and testable directly)
+- The form under validation test (`PersonalInfoForm` stays real in `cv-upload.test.tsx`)
+- The module under test
 
 ## Fixtures and Factories
 
 **Test Data:**
-```json
-// tasks/sample-resume.json — valid resume; tasks/invalid-resume.json — malformed
+```typescript
+const validResult = {
+  funCasual: ["First fun bio", "Second fun bio"],
+  professional: ["First pro bio", "Second pro bio"],
+};
+
+function makeResult(tag: string): BioResult {
+  return {
+    funCasual: [`fun-${tag}-1`, `fun-${tag}-2`],
+    professional: [`pro-${tag}-1`, `pro-${tag}-2`],
+  };
+}
 ```
 
 **Location:**
-- `tasks/` (sample JSON fixtures only; not referenced by any test runner)
+- Inline in each test file (no shared fixtures dir)
 
 ## Coverage
 
-**Requirements:** None enforced (no coverage tooling)
+**Requirements:** Enforced — `coverage.include` scoped to tested modules, thresholds statements 70 / lines 70 / functions 65 / branches 65 (see `vitest.config.ts` and ADR-0002)
 
 **View Coverage:**
 ```bash
-# Not available
+pnpm test:coverage
 ```
 
 ## Test Types
 
 **Unit Tests:**
-- Not used
+- 55 tests across 4 files: bio-generator parsing + `generateBios` provider dispatch, resume-parser normalization, CV upload edit flow, bio-history hook
 
 **Integration Tests:**
-- Not used
+- None
 
 **E2E Tests:**
-- Not used (no Playwright/Cypress)
+- Not used (manual preview testing instead)
 
 ## Common Patterns
 
 **Async Testing:**
 ```typescript
-// N/A — no tests
+it("fails on an empty provider response", async () => {
+  vi.mocked(callOpenRouter).mockResolvedValue("");
+  const result = await generateBios(resume, settingsFor("openrouter", "k"));
+  expect(result).toEqual({ success: false, error: "Empty response from AI" });
+});
 ```
 
 **Error Testing:**
 ```typescript
-// N/A — no tests
+it("returns null for malformed JSON", () => {
+  expect(parseAIResponse('{"funCasual": [unclosed')).toBeNull();
+});
 ```
 
-## Recommendations
-
-- Set up Vitest (the project already uses Vite) for unit tests on the highest-value pure modules: `app/lib/types.ts` (schemas), `app/lib/job-parser.ts` + `app/lib/resume-tailor.ts` (AI response parsing — this is where malformed AI JSON currently falls back silently), `app/lib/apply-suggestion.ts` (resume mutation logic)
-- Export `parseAIResponse`/`parseJobDescription` internals for direct testing
-- Manual QA flow today: run dev server, upload `tasks/sample-resume.json`, exercise `/job` with a pasted description
+**Hook/DOM testing:** `// @vitest-environment jsdom` docblock for component/hook files.
 
 ---
 
-*Testing analysis: 2026-08-04*
+*Testing analysis: 2026-08-19*
