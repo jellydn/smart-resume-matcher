@@ -131,6 +131,35 @@ jobs:
             exit 1
           fi
           echo "✓ All CI setup-node versions ($ci_versions) match Dockerfile node:${image_major}-alpine and satisfy engines.node ($range)"
+      # pnpm/action-setup installs the pnpm version from `packageManager` by
+      # default. A hardcoded `version:` input would make CI run a different
+      # pnpm than the declared toolchain. Fail fast on any drift.
+      - name: Verify pnpm/action-setup version input matches packageManager
+        run: |
+          declared=$(grep -Eo '"packageManager"[^,]*' package.json | sed -E 's/.*"([^"]+)".*/\1/' | cut -d'+' -f1)
+          declared_ver=$(echo "$declared" | sed -E 's/^pnpm@//')
+          if [ -z "$declared" ]; then
+            echo "::error::Could not read packageManager from package.json"
+            exit 1
+          fi
+          # Explicit `version:` inputs on pnpm/action-setup steps (anchored
+          # so setup-node's `node-version:` can never match).
+          pinned=$(grep -A 3 'uses: pnpm/action-setup' .github/workflows/ci.yml | grep -Eo '^[[:space:]]*version: *"[^"]*"' | sed -E 's/.*"([^"]*)"/\1/')
+          if [ -n "$pinned" ]; then
+            failed=0
+            for v in $pinned; do
+              if [ "$v" != "$declared_ver" ]; then
+                echo "::error::pnpm/action-setup version '$v' does not match packageManager '$declared'. Remove the version input so CI resolves packageManager, or keep it in sync."
+                failed=1
+              fi
+            done
+            if [ "$failed" -ne 0 ]; then
+              exit 1
+            fi
+            echo "✓ pnpm/action-setup version ($pinned) matches packageManager ($declared)"
+          else
+            echo "✓ pnpm/action-setup resolves pnpm from packageManager ($declared)"
+          fi
 
   security:
     name: Dependency Security Audit
