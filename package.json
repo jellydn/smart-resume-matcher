@@ -13,6 +13,8 @@
 		"typecheck": "react-router typegen && tsc",
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
+		"test:toolchain": "bash scripts/verify-toolchain.test.sh",
+		"verify:toolchain": "bash scripts/verify-toolchain.sh",
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
 		"format": "biome format",
