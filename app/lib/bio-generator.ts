@@ -89,9 +89,13 @@ function parseOptionsText(content: string): BioResult | null {
 	const funCasual: string[] = [];
 	const professional: string[] = [];
 
-	// Split on tone headings, e.g. "Fun & Casual version:" / "Professional version:"
+	// Split on tone headings, e.g. "Fun & Casual version:" / "Professional version:".
+	// A heading must sit on its own line (line start, a "version"/":" suffix, and
+	// nothing else on the line) so a bio body that merely contains the word
+	// "professional" (e.g. "I'm a professional engineer") is not misread as a
+	// heading switch.
 	const parts = content.split(
-		/(fun\s*&?\s*casual|professional)\s*(?:version)?\s*:?/i,
+		/(?:^|\n)\s*(fun\s*&?\s*casual|professional)\s*(?::|version\s*:?)\s*(?=\n|$)/i,
 	);
 	let current: "funCasual" | "professional" | null = null;
 

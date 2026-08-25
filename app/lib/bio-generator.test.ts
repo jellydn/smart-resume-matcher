@@ -137,6 +137,38 @@ Option 2: D`;
 			});
 		});
 
+		it("does not treat 'professional' inside a bio body as a heading", () => {
+			const text = `Fun & Casual version:
+Option 1: I'm a professional full-stack engineer.
+Option 2: I've built software.
+Professional version:
+Option 1: Dung is a Senior Engineer.
+Option 2: Dung is an AI enthusiast.`;
+			expect(parseAIResponse(text)).toEqual({
+				funCasual: [
+					"I'm a professional full-stack engineer.",
+					"I've built software.",
+				],
+				professional: [
+					"Dung is a Senior Engineer.",
+					"Dung is an AI enthusiast.",
+				],
+			});
+		});
+
+		it("does not split on 'professional' when it starts a body line", () => {
+			const text = `Fun & Casual version:
+Option 1: First bio
+Option 2: Second bio
+Professional version:
+Option 1: Dung is a Senior Engineer.
+Professional development is his focus.
+Option 2: Dung is an AI enthusiast.`;
+			expect(parseAIResponse(text)?.professional[0]).toBe(
+				"Dung is a Senior Engineer. Professional development is his focus.",
+			);
+		});
+
 		it("collapses multiline option bodies into single lines", () => {
 			const text = `Fun & Casual version:
 Option 1: First line
