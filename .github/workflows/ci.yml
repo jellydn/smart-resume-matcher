@@ -86,6 +86,52 @@ jobs:
             exit 1
           fi
           echo "✓ TypeScript $ts_ver supports tsconfig target ($target)"
+      # CI must test on the same Node major the runtime image uses, and that
+      # major must satisfy engines.node — otherwise tests pass on a Node the
+      # deployed app doesn't actually run. Fail fast on any drift.
+      - name: Verify CI setup-node versions match Dockerfile and engines.node
+        run: |
+          ci_versions=""
+          while IFS= read -r v; do
+            v=$(echo "$v" | sed -E 's/node-version: *"([^"]*)"/\1/')
+            ci_versions="$ci_versions $v"
+          done < <(grep -Eo 'node-version: *"[^"]*"' .github/workflows/ci.yml)
+
+          image_major=$(grep -Eo 'FROM node:[0-9]+' Dockerfile | head -1 | grep -Eo '[0-9]+')
+          range=$(grep -Eo '"node": *"[^"]*"' package.json | sed -E 's/.*"([^"]*)"/\1/')
+
+          if [ -z "${ci_versions// /}" ]; then
+            echo "::error::No node-version found in the CI workflow's setup-node steps"
+            exit 1
+          fi
+          if [ -z "$image_major" ]; then
+            echo "::error::Could not find a 'FROM node:<major>' base image in Dockerfile"
+            exit 1
+          fi
+          if ! echo "$range" | grep -Eq '^>=[0-9]+(\.[0-9]+)*$'; then
+            echo "::error::Unsupported engines.node range '$range'. Only '>=X' ranges are supported by this check."
+            exit 1
+          fi
+          min_major=$(echo "$range" | sed -E 's/^>=([0-9]+).*/\1/')
+
+          failed=0
+          for v in $ci_versions; do
+            v_major=$(echo "$v" | cut -d. -f1)
+            if [ "$v_major" != "$image_major" ]; then
+              echo "::error::CI setup-node version '$v' (major $v_major) does not match Dockerfile node image (node:${image_major}-alpine)"
+              failed=1
+            fi
+            if [ "$v_major" -lt "$min_major" ]; then
+              echo "::error::CI setup-node version '$v' (major $v_major) does not satisfy engines.node '$range' in package.json"
+              failed=1
+            fi
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
+          echo "✓ All CI setup-node versions ($ci_versions) match Dockerfile node:${image_major}-alpine and satisfy engines.node ($range)"
+
   security:
     name: Dependency Security Audit
     runs-on: ubuntu-latest
