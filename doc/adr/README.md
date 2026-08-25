@@ -7,6 +7,7 @@ This directory records significant architectural decisions for this project. Eac
 | [0001](0001-pin-pdfjs-dist-v4.md) | Pin pdfjs-dist to v4 for client-side PDF extraction | Accepted |
 | [0002](0002-vitest-coverage-enforcement-strategy.md) | Vitest coverage enforcement strategy | Accepted |
 | [0003](0003-cv-import-pipeline.md) | CV import pipeline: client-side extraction, AI parsing, editable preview | Accepted |
+| [0004](0004-dokku-deploy-pipeline.md) | Dokku deploy pipeline: deploy-branch alignment, force-push, and pnpm-11 boot fix | Accepted |
 
 ## Creating a new ADR
 

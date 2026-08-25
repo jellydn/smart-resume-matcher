@@ -24,8 +24,11 @@ RUN pnpm run build
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+# pnpm-workspace.yaml carries verifyDepsBeforeRun: false (see that file) so
+# `pnpm run start` doesn't try to reinstall deps at boot and abort without a
+# TTY (ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY) — must be copied here too.
 RUN mkdir -p /app/data && chown -R node:node /app/data /app
-COPY --chown=node:node package.json pnpm-lock.yaml ./
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --from=production-dependencies-env --chown=node:node /app/node_modules /app/node_modules
 COPY --from=build-env --chown=node:node /app/build /app/build
 USER node

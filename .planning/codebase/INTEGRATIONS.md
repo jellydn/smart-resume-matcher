@@ -1,93 +1,84 @@
 # External Integrations
 
-**Analysis Date:** 2026-08-04
+**Analysis Date:** 2026-08-25
 
 ## APIs & External Services
 
-**AI Providers (resume tailoring + job parsing):**
-- OpenRouter - Chat completions (`anthropic/claude-3.5-haiku` model)
-  - SDK/Client: direct `fetch` to `https://openrouter.ai/api/v1/chat/completions`
-  - Auth: `VITE_OPENROUTER_API_KEY` / apiKeys in localStorage
-- OpenAI - Chat completions (`gpt-4o-mini` model)
-  - SDK/Client: direct `fetch` to `https://api.openai.com/v1/chat/completions`
-  - Auth: `VITE_OPENAI_API_KEY` / localStorage
-- Anthropic - Messages API (`claude-3-haiku-20240307`)
-  - SDK/Client: direct `fetch` to `https://api.anthropic.com/v1/messages`
-  - Auth: `VITE_ANTHROPIC_API_KEY` / localStorage
-- Ollama - Local chat (`llama3.2` via `http://localhost:11434/api/chat`)
-  - Auth: none (local)
-- Browser AI (WebLLM) - `window.ai.languageModel` experimental API
-  - Auth: none (in-browser, free)
+**AI Providers (client-side calls from the browser):**
+- OpenRouter - `callOpenRouter` in `app/lib/ai-chat.ts` (POST `/api/v1/chat/completions`, model `anthropic/claude-3.5-haiku`); connection test in `app/lib/ai-connection.ts`
+- OpenAI - `callOpenAI` (`gpt-4o-mini`); connection test via `/v1/models`
+- Anthropic - `callAnthropic` (`claude-3-haiku-20240307`, `anthropic-dangerous-direct-browser-access: true`); connection test via `/v1/messages`
+- Ollama (local) - `callOllama` (`llama3.2`, base URL configurable, HTTP/HTTPS only); connection test via `/api/tags`
+- Browser AI - `callBrowserAI` via experimental `window.ai.languageModel` (Chrome 127+, no key)
+- Auth: API keys stored per-provider in localStorage (`resume-matcher-ai-settings`), never on the server
 
-All provider calls live in `app/lib/ai-connection.ts` (connection tests), `app/lib/job-parser.ts` (job analysis), and `app/lib/resume-tailor.ts` (tailoring).
+**Google Fonts / GStatic:**
+- PWA Workbox runtime caching (`CacheFirst`, 1-year TTL) for `fonts.googleapis.com` and `fonts.gstatic.com` in `vite.config.ts`
 
 ## Data Storage
 
 **Databases:**
-- SQLite (local development) - file at `./data/sqlite.db`
-  - Connection: `DATABASE_PATH`
-  - Client: better-sqlite3 + `drizzle-orm/better-sqlite3`
-- PostgreSQL (production/Vercel) - via `DATABASE_URL`
-  - Connection: `DATABASE_URL`
-  - Client: postgres.js + `drizzle-orm/postgres-js`
-
-Schema split by dialect: `app/db/schema/sqlite.ts`, `app/db/schema/postgres.ts`, dispatched from `app/db/schema/index.ts`.
+- SQLite (default) - `better-sqlite3` + Drizzle; file at `DATABASE_PATH` (default `./data/sqlite.db`)
+- PostgreSQL (optional) - `postgres-js` + Drizzle; `DATABASE_URL` required
+- Connection: `DATABASE_TYPE` selects dialect; schema split in `app/db/schema/sqlite.ts` / `postgres.ts`
+- Client: Drizzle ORM (`app/db/index.ts`)
 
 **File Storage:**
-- Local filesystem only (SQLite file). No external object storage.
+- Local filesystem only (SQLite data dir `/app/data` on Dokku); no object storage
 
 **Caching:**
-- Browser localStorage for resume data, AI settings, job history
-- Service worker runtime caching for Google Fonts (CacheFirst, 1-year TTL) via `vite-plugin-pwa` in `vite.config.ts`
+- None (server-side); browser PWA Workbox caches static assets + Google Fonts
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- better-auth 1.4 (email/password only)
-- Implementation: server instance in `app/lib/auth.server.ts` with Drizzle adapter; client in `app/lib/auth-client.ts`; server routes proxied at `app/routes/api.auth.$.tsx`
-- Session expiry: 7 days, sliding update every 24h
-- Note: Drizzle adapter currently hardcodes `provider: "sqlite"` (`app/lib/auth.server.ts`)
+- Better Auth (self-hosted) - email/password, session cookies (7-day expiry, 24h update age)
+- Implementation: `app/lib/auth.server.ts` (Drizzle adapter) + `app/lib/auth-client.ts`; routes `api/auth/*`; auth tables auto-managed via `app/db/schema`
+- Env: `BETTER_AUTH_SECRET` (required), `AUTH_TRUSTED_ORIGINS` / `APP_URL`
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None (no Sentry/other)
+- None (no Sentry/etc.)
 
 **Logs:**
-- `console.error` / `console.warn` throughout routes, hooks, and lib
-- React Router `ErrorBoundary` in `app/root.tsx` (stack only in dev)
+- `console.warn` / `console.error` in hooks and libs (localStorage parse/save failures, cloud sync errors); Dokku container logs
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Vercel (target; postgres setup documented in `.env.example` and README)
+- Dokku (`smart-resume-matcher`, live at `https://smart-resume-matcher.itman.fyi`); Dockerfile build, SQLite volume mount
 
 **CI Pipeline:**
-- GitHub Actions `.github/workflows/ci.yml` on push/PR to `main`/`develop`:
-  - `biome ci .` (quality)
-  - `pnpm run typecheck` (type check)
-  - `pnpm run build` (build)
+- GitHub Actions (`.github/workflows/ci.yml`) - Code Quality (biome), Dependency Security Audit (`pnpm audit --audit-level=high`), Type Check, Unit Tests (`pnpm test:coverage` + best-effort PR coverage comment), Build
+- Deploy (`.github/workflows/deploy-dokku.yml`) - pushes `main` to Dokku on every push (deploy branch `main`, force-push, serialized concurrency)
+
+**Dependency automation:**
+- Renovate (`renovate.json`) - daily dependency PRs
 
 ## Environment Configuration
 
 **Required env vars:**
-- `DATABASE_TYPE` (`sqlite` default / `postgres`)
-- `DATABASE_URL` (when postgres)
-- `DATABASE_PATH` (sqlite path, has default)
-- Optional client-side: `VITE_OPENROUTER_API_KEY`, `VITE_OPENAI_API_KEY`, `VITE_ANTHROPIC_API_KEY`
+- `BETTER_AUTH_SECRET` - auth secret (auto-generated by Dokku via `app.json` if omitted)
+- `APP_URL` - production trusted origin for auth
+
+**Optional env vars:**
+- `DATABASE_TYPE` (`sqlite`|`postgres`, default `sqlite`), `DATABASE_PATH`, `DATABASE_URL`
+- `AUTH_TRUSTED_ORIGINS` - comma-separated override of `APP_URL`
+- `NODE_ENV` (production in Docker)
 
 **Secrets location:**
-- Server: env vars (`.env`, gitignored)
-- Client: localStorage under `api-keys` (encrypted client-side per README; AI keys never sent to server)
+- GitHub Actions repository secrets: `DOKKU_GIT_REMOTE_URL`, `DOKKU_SSH_PRIVATE_KEY`, `DOKKU_SSH_HOST_KEY`, `DOKKU_TRACE`
+- AI provider keys: browser localStorage only (never committed)
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None
+- None (no external webhooks)
 
 **Outgoing:**
-- None (auth callbacks handled internally by better-auth route `api/auth/*`)
+- None (no outbound webhooks); AI provider calls are direct fetch from the browser
 
 ---
 
-*Integration audit: 2026-08-04*
+*Integration audit: 2026-08-25*

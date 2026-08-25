@@ -1,100 +1,88 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-08-04
-
-Primary source: `AGENTS.md` (repo-adopted coding standards) + observed patterns. `CLAUDE.md` merely references `AGENTS.md`.
+**Analysis Date:** 2026-08-25
 
 ## Naming Patterns
 
 **Files:**
-- kebab-case for utilities and hooks (`use-resume-storage.ts`, `export-pdf.tsx`, `job-parser.ts`)
-- shadcn/ui files kebab-case (`alert-dialog.tsx`, `dropdown-menu.tsx`)
-- Route files kebab-case, api routes with `$.` splat (`api.auth.$.tsx`)
-- AGENTS.md prescribes PascalCase for components; in practice `app/components/resume/form-wizard.tsx` is kebab-case
+- Kebab-case: `bio-generator.ts`, `use-resume-storage.ts`, `resume-comparison-view.tsx`
+- Tests co-located as `<name>.test.ts(x)`
 
 **Functions:**
-- camelCase, descriptive (`handlePersonalInfoChange`, `saveToCloud`, `parseJobDescription`)
-- Event handlers: `handle*` prefix (route modules)
+- `camelCase`; verbs first for actions (`generateBios`, `parseAIResponse`, `normalizeParsedResume`, `extractTextFromCvFile`)
+- React hooks prefixed `use` (`useBioHistory`, `useResumeStorage`)
 
 **Variables:**
-- camelCase; booleans often `is*`/`has*` prefixed (`isLoading`, `hasResume`, `isLoaded`)
+- `camelCase`, descriptive; derived/validated values named for what they hold (`hasProfile`, `isLoaded`, `syncStatus`)
 
 **Types:**
-- PascalCase with `Type` suffix for inferred schema types (`Resume`, `Experience`, `AISettings`)
-- Schemas: PascalCase with `Schema` suffix (`resumeSchema`, `tailoringResultSchema`)
+- `PascalCase` interfaces/types; Zod schemas named `<domain>Schema` (`resumeSchema`, `bioResultSchema`); inferred types via `z.infer` (`Resume`, `BioResult`)
 
 ## Code Style
 
 **Formatting:**
-- Biome 2.3 (biome.json): tab indentation, double quotes, `formatWithErrors: true`
-- Import organization: Biome `organizeImports` on (assist)
+- Biome (tabs, double quotes, trailing commas default)
+- `import type` for type-only imports (enforced by `verbatimModuleSyntax` in tsconfig)
 
 **Linting:**
-- Biome with recommended rules; custom: `noUnusedVariables: error`, `noArrayIndexKey: off`, several a11y rules relaxed (`noStaticElementInteractions`, `noSvgWithoutTitle`, `useKeyWithClickEvents` off)
-- CI enforces `biome ci .`
+- Biome `recommended` preset; `noUnusedVariables: error`; a11y relaxations for static element interactions
+- `organizeImports` on (assist action)
 
 ## Import Organization
 
 **Order:**
-1. React/external packages first (`react`, `react-router`, `lucide-react`, `zod`, `drizzle-orm`)
-2. Internal `~/` path aliases (components, hooks, lib, db)
-3. Type-only imports with `import type { }` per AGENTS.md (e.g., `import type { Resume } from "~/lib/types"`)
-4. Generated route types: `import type { Route } from "./+types/<route>"`
+1. External packages (lucide-react, react, zod, etc.)
+2. `~/`-aliased internal modules (components, hooks, lib, types)
+3. Relative imports (rare; e.g. `+types` route files)
 
 **Path Aliases:**
-- `~/*` → `./app/*` (tsconfig paths; resolved by vite-tsconfig-paths)
+- `~/*` → `./app/*` (tsconfig `paths` + Vite `resolve.tsconfigPaths` + Vitest alias)
 
 ## Error Handling
 
 **Patterns:**
-- Zod `.safeParse` at trust boundaries; fall back to defaults or return structured errors (never crash)
-- AI services return `{ success: false, error: string }` envelopes instead of throwing across boundaries (`resume-tailor.ts`, `job-parser.ts`)
-- Route loaders/actions: try/catch → `Response.json({ error }, { status })` with 400/401/405/500
-- ErrorBoundary in `app/root.tsx` with `isRouteErrorResponse`; dev-only stack traces
-- Client UI: per-field validation errors + server error alert (see `login.tsx`)
+- AI services return result envelopes `{ success, result?, error? }` — callers branch on `success`, never catch-and-rethrow across the boundary
+- Storage hooks wrap `localStorage` in try/catch, `console.warn` on invalid schema, `console.error` on failures, fall back to safe defaults
+- API handlers return `{ success, error }` JSON; auth failures return 401 handled gracefully by the client
+- User-facing error messages are short strings surfaced in `Alert` components
 
 ## Logging
 
-**Framework:** `console` (no logging library)
+**Framework:** `console` (warn/error) — no logging library
 
 **Patterns:**
-- `console.error` in catch blocks (storage, sync, API, AI calls)
-- `console.warn` for recoverable validation issues (AI response fallback)
+- `console.warn` for recoverable data issues (invalid localStorage schema, best-effort CI comment)
+- `console.error` for real failures (storage read/write, cloud sync, extraction errors)
+- No `console.log` in production code paths
 
 ## Comments
 
 **When to Comment:**
-- Section-level comments for schema groups in `types.ts` (`// Experience Schema`)
-- `// @ts-expect-error` for experimental Browser AI API
-- API/endpoint and config intent comments in `.env.example`
-- Minimal inline comments otherwise
+- Explain *why* (rationale, invariants), not *what* — e.g. the pdfjs worker minification note in `cv-extract.ts`, the pnpm-11 config rationale in `pnpm-workspace.yaml`, the best-effort CI comment note
+- Config files carry intent comments for deliberate non-obvious decisions (ADR references, override scopes)
+- Regexes with subtle lookaheads get a short comment describing the contract (e.g. bio heading/option splitting)
 
 **JSDoc/TSDoc:**
-- Not used
+- Not used; type signatures + result envelopes self-document
 
 ## Function Design
 
-**Size:**
-- No enforced limit; `job.tsx` (577 lines) and `resume.tsx` (510 lines) are large route modules with many handlers
+**Size:** Small focused functions; large files are split by concern (e.g. parser helpers like `asString`/`asArray`/`asRecord` extracted per coercion)
+- Note: some UI files are large (`resume-comparison-view.tsx` ~935 lines, `tailored-resume-preview.tsx` ~782) — pre-existing, flag for splitting
 
-**Parameters:** Typed; options objects where many flags (e.g., `suggestionSchema`)
+**Parameters:** Few, object options where >2 (`BioGenerationOptions`, `BioHistoryEntry` options param)
 
-**Return Values:**
-- Services return result envelopes `{ success, result? | error? }`
-- Hooks return plain objects with flags (`isLoaded`, `syncStatus`)
-- Schemas inferred to `Type` aliases
+**Return Values:** Explicit; services return result envelopes; parsers return `T | null`; hooks return a named `XxxReturn` interface
 
 ## Module Design
 
-**Exports:**
-- Named exports throughout; `export default` for route page components and root `App`
-- Barrel exports where useful: `~/components/ui/*` via direct imports; `~/db/schema` index re-exports
+**Exports:** Named exports throughout; one primary function/component per module
 
 **Barrel Files:**
-- `app/db/schema/index.ts`: dialect-aware re-export (sqlite vs postgres tables)
-- `app/routes.ts`: central route registry
-- shadcn/ui: one file per primitive (no barrel)
+- `app/db/schema/index.ts` re-exports the dialect-selected schema
+- `app/lib/types.ts` is the de-facto barrel for all domain types/schemas
+- `ui/` components are imported directly (no barrel)
 
 ---
 
-*Convention analysis: 2026-08-04*
+*Convention analysis: 2026-08-25*

@@ -3,6 +3,12 @@
 # "fix" these back to pnpm 11 defaults without reading the rationale below.
 # ---------------------------------------------------------------------------
 
+# verifyDepsBeforeRun: false — pnpm 11 defaults this to `install`, which makes
+# `pnpm run start` reinstall deps at boot and abort without a TTY
+# (ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY) in the Dokku runtime image.
+# Deps are already installed in the image, so skip the pre-run check.
+verifyDepsBeforeRun: false
+
 # minimumReleaseAge: 0 — deliberate opt-out of pnpm 11's new 24h supply-chain
 # gate (default 1440 minutes). This repo merges dependency PRs daily, and the
 # gate stalls `pnpm install --frozen-lockfile` for hours on every fresh
