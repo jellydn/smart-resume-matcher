@@ -65,6 +65,10 @@ jobs:
           # but the action defaults to pushing `master`, which updates the ref without
           # triggering a build. Push to `main` so the deploy actually runs.
           branch: main
+          # Dokku's `main` ref was seeded with an old deploy-setup commit that is not
+          # in our history, so a plain push is non-fast-forward; the deploy branch is
+          # just a deployment marker, so force-pushing is safe and documented.
+          git_push_flags: --force
           git_remote_url: ${{ secrets.DOKKU_GIT_REMOTE_URL }}
           ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
           ssh_host_key: ${{ secrets.DOKKU_SSH_HOST_KEY }}
