@@ -43,6 +43,11 @@ jobs:
       # pnpm than the declared toolchain. Fail fast on any drift.
       - name: Verify pnpm/action-setup version input matches packageManager
         run: bash scripts/verify-toolchain.sh check_pnpm_action_setup
+      # The drift-guard logic lives in scripts/verify-toolchain.sh; run its
+      # unit tests so a change that breaks a guard fails here, not only when
+      # a drift actually occurs.
+      - name: Test verify-toolchain guards
+        run: bash scripts/verify-toolchain.test.sh
 
   security:
     name: Dependency Security Audit
