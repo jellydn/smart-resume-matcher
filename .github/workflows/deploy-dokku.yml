@@ -61,6 +61,10 @@ jobs:
       - name: Deploy to Dokku
         uses: dokku/github-action@cc7dec1d2b9fed249a14ae462bc953bba436f78c # v1.10.0
         with:
+          # The Dokku app's deploy branch is `main` (dokku git:set ... deploy-branch main),
+          # but the action defaults to pushing `master`, which updates the ref without
+          # triggering a build. Push to `main` so the deploy actually runs.
+          branch: main
           git_remote_url: ${{ secrets.DOKKU_GIT_REMOTE_URL }}
           ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
           ssh_host_key: ${{ secrets.DOKKU_SSH_HOST_KEY }}
