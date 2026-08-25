@@ -18,6 +18,22 @@ jobs:
         with:
           version: 2.5.6
       - run: biome ci .
+      # The Dockerfile corepack pin must match the `packageManager` field in
+      # package.json, or the runtime image resolves a different pnpm than the
+      # one the project is built and tested against. Fail fast on drift.
+      - name: Verify Dockerfile corepack pin matches packageManager
+        run: |
+          declared=$(grep -Eo '"packageManager"[^,]*' package.json | sed -E 's/.*"([^"]+)".*/\1/' | cut -d'+' -f1)
+          pinned=$(grep -Eo 'corepack prepare [^ ]+ --activate' Dockerfile | awk '{print $3}')
+          if [ -z "$pinned" ]; then
+            echo "::error::Could not find a 'corepack prepare pnpm@X --activate' pin in Dockerfile"
+            exit 1
+          fi
+          if [ "$declared" != "$pinned" ]; then
+            echo "::error::Dockerfile corepack pin '$pinned' does not match packageManager '$declared'. Keep them in sync."
+            exit 1
+          fi
+          echo "✓ Dockerfile corepack pin ($pinned) matches packageManager ($declared)"
 
   security:
     name: Dependency Security Audit
