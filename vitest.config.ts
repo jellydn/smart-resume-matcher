@@ -26,6 +26,7 @@ export default defineConfig({
 			include: [
 				"app/lib/bio-generator.ts",
 				"app/lib/resume-parser.ts",
+				"app/lib/cv-extract.ts",
 				"app/components/resume/cv-upload.tsx",
 				"app/hooks/use-bio-history.ts",
 			],
