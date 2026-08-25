@@ -1,114 +1,116 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-08-19
+**Analysis Date:** 2026-08-25
 
 ## Tech Debt
 
-**Coverage `include` list is manual:**
-- Issue: a module can gain a test file without being added to `coverage.include` in `vitest.config.ts`, silently staying unenforced
-- Files: `vitest.config.ts`
-- Impact: coverage thresholds can regress unnoticed for the new module
-- Fix approach: a lint/check that every `*.test.ts(x)` has its source in `include` (or move to a glob)
+**Large UI components:**
+- Issue: `resume-comparison-view.tsx` (~935 lines) and `tailored-resume-preview.tsx` (~782 lines) exceed comfortable single-file size; `export-docx.ts` (~593) is a long builder
+- Files: `app/components/resume/resume-comparison-view.tsx`, `app/components/resume/tailored-resume-preview.tsx`, `app/lib/export-docx.ts`
+- Impact: Hard to navigate; changes risk regression in unrelated sections
+- Fix approach: Split comparison view into per-section subcomponents; extract export builders into per-section helpers
 
-**Redundant `removeItem` in bio history:**
-- Issue: `clearHistory` calls `localStorage.removeItem`, but the save effect immediately re-persists `[]`, so the remove is dead
-- Files: `app/hooks/use-bio-history.ts`
-- Impact: harmless (history is cleared either way), but misleading
-- Fix approach: drop `removeItem` or skip the save after a clear
+- **Corepack/Docker pin drift:**
+- Issue: `Dockerfile` pins `pnpm@10.34.5` via corepack, but `package.json` declares `pnpm@11.20.0` — the runtime resolves 11.20.0, so the pin is stale/misleading
+- Files: `Dockerfile`, `package.json`
+- Impact: Confusing; a future pnpm-10-specific assumption would silently run against 11
+- Fix approach: Align the corepack pin to 11.20.0 (or drop the explicit prepare since `packageManager` governs)
 
-**Two DB dialects to keep in sync:**
-- Issue: sqlite schema (text ids) and postgres schema (uuid ids) are parallel files that must stay structurally identical
-- Files: `app/db/schema/sqlite.ts`, `app/db/schema/postgres.ts`
-- Impact: drift risk; postgres path is lightly exercised
-- Fix approach: single Drizzle schema with a shared column builder, or CI parity check
+**README provider naming drift:**
+- Issue: README AI-provider table says "WebLLM", but the code's browser provider is Chrome's experimental `window.ai` ("Browser AI")
+- Files: `README.md`, `app/lib/types.ts`, `app/lib/ai-connection.ts`
+- Impact: Users may look for a WebLLM option that doesn't exist
+- Fix approach: Rename the README row to "Browser AI (window.ai, Chrome 127+)"
 
 ## Known Bugs
 
-**PDF text-extraction artifacts:**
-- Symptoms: ligature glyphs (`fi`→`~`), line-wrap hyphens appear in extracted text
+- **PDF ligature/hyphenation artifacts:** extracted PDF text can contain broken ligatures and hyphenated line splits
+- Symptoms: garbled words in parsed resumes from PDFs
 - Files: `app/lib/cv-extract.ts`
-- Trigger: PDFs with embedded-font ligatures / hyphenated line breaks
-- Workaround: the AI parse smooths most of it; the editable preview lets users fix the rest
+- Trigger: PDFs with complex typography; mitigated by the editable preview before confirm
+- Workaround: user reviews/edits the draft; paste text directly for scanned/image PDFs (no text layer)
 
 ## Security Considerations
 
-**AI API keys in localStorage:**
-- Risk: keys are stored client-side and read by the browser; any XSS or malicious extension could exfiltrate them
+**API keys in localStorage:**
+- Risk: AI provider keys stored in browser localStorage under `resume-matcher-ai-settings`; any XSS could exfiltrate them
 - Files: `app/hooks/use-ai-settings.ts`
-- Current mitigation: privacy-first design (keys never touch the server); README warns about local key storage
-- Recommendations: keep clear warnings; consider a server proxy for keyed providers
+- Current mitigation: keys never leave the browser; app is client-side rendered for these features; no third-party scripts
+- Recommendations: Consider session-only storage or an explicit "clear keys" affordance; document the tradeoff
 
-**Anthropic direct-browser-access header:**
-- Risk: `anthropic-dangerous-direct-browser-access` signals browser CORS access; key is exposed to the client by design
-- Files: `app/lib/ai-chat.ts`, `app/lib/ai-connection.ts`
-- Current mitigation: user-supplied key; no server-side relay
-- Recommendations: document the trade-off; optionally route Anthropic through a backend
+**Auth secret required at boot:**
+- Risk: `better-auth` refuses to start with the default secret (verified in container test) — a misconfigured deploy fails loudly (good), but the error message doesn't name `BETTER_AUTH_SECRET`
+- Files: `app/lib/auth.server.ts`, `app.json`
+- Current mitigation: `app.json` auto-generates the secret on Dokku
+- Recommendations: none critical
 
 ## Performance Bottlenecks
 
-**Lazy-loaded extraction libs:**
-- Problem: pdfjs/mammoth are heavy; first PDF/DOCX upload triggers a large dynamic import
+**Whole-resume JSON to AI:**
+- Problem: `createUserPrompt` serializes the entire resume JSON into every bio/job prompt; long resumes inflate tokens
+- Files: `app/lib/bio-generator.ts`, `app/lib/resume-tailor.ts`
+- Cause: no prompt summarization/section selection
+- Improvement path: allow tone/length to trim included sections, or summarize first
+
+**PDF worker startup:**
+- Problem: first PDF upload pays worker + pdfjs load cost
 - Files: `app/lib/cv-extract.ts`
-- Cause: pdfjs worker + mammoth bundle load on demand (intentional)
-- Improvement path: acceptable for now; preload only if CV upload becomes a hot path
+- Cause: lazy import only on first use (already lazy, so acceptable)
+- Improvement path: keep lazy; consider preloading after first interaction
 
 ## Fragile Areas
 
-**AI response parsing:**
-- Files: `app/lib/bio-generator.ts`, `app/lib/resume-parser.ts`, `app/lib/job-parser.ts`
-- Why fragile: depends on LLM output shape; each has its own `extractJsonObject` + fallback (duplicated logic)
-- Safe modification: change one parser at a time; the 55-test suite covers bio/parser paths but not `job-parser`
-- Test coverage: `job-parser.ts` untested; `resume-parser.ts` at ~54.7% statements
+**Bio text-fallback parser:**
+- Files: `app/lib/bio-generator.ts`
+- Why fragile: regex-based heading/option splitting must tolerate LLM formatting variance (JSON first, text fallback second); heading must be full-line, options may be inline
+- Safe modification: keep the JSON path primary; add regression tests for any regex change
+- Test coverage: good (36 tests, incl. inline-option regression)
 
-**CV upload component:**
-- Files: `app/components/resume/cv-upload.tsx`
-- Why fragile: 300+ lines orchestrating extract→parse→edit→confirm with 8 forms
-- Safe modification: `cv-upload.test.tsx` covers the edit/confirm flow but not the file-extraction paths
-- Test coverage: ~53% statements
+**Deploy pipeline:**
+- Files: `.github/workflows/deploy-dokku.yml`, `Dockerfile`, `pnpm-workspace.yaml`
+- Why fragile: depends on deploy-branch alignment (`branch: main`), force-push semantics, and the pnpm-11 `verifyDepsBeforeRun: false` setting being present in the runner image (ADR-0004)
+- Safe modification: any change must keep `pnpm-workspace.yaml` copied into the runner stage; changing the deploy branch requires updating the workflow
+- Test coverage: none automated — verified manually via local Docker build/boot
 
 ## Scaling Limits
 
-**localStorage resume/history:**
-- Current capacity: ~5 MB per origin
-- Limit: large resumes + history entries could approach quota
-- Scaling path: move to IndexedDB or the existing `user_resumes` DB table if cloud sync is enabled
+- **localStorage per-feature caps:** bio history and job history capped at 10 entries each (documented constants); resume is a single object
+- **CV text cap:** `MAX_CV_TEXT_LENGTH = 30000` chars sent to AI; oversized CVs rejected with a message
+- **File size cap:** 5 MB for CV uploads (`cv-extract.ts`)
+- Scaling path: these are deliberate privacy-friendly limits; cloud sync exists only for the resume
 
 ## Dependencies at Risk
 
-**pdfjs-dist (pinned v4):**
-- Risk: pinned behind current major (v5/v6 require native `Uint8Array#toHex`, Chrome 129+)
-- Impact: missing newer pdfjs features/fixes
-- Migration plan: see ADR-0001 — re-verify the native dependency on upgrade or set a minimum browser version
+**pdfjs-dist pinned to v4:**
+- Risk: pinned to v4.x while v5 is current; the v5 worker has known minification bugs ("toHex is not a function") that motivated the pin (ADR-0001)
+- Impact: no feature updates; potential CVE exposure over time
+- Migration plan: revisit on pdfjs v5 fixes; re-test the worker path in the browser
 
-**TypeScript 7 / Vite 8 / React Router 8:**
-- Risk: bleeding-edge majors with less ecosystem stability
-- Impact: occasional breaking changes in minor updates
-- Migration plan: pin and upgrade deliberately via Renovate
+**nanoid override:**
+- Risk: `nanoid@<3.3.18` forced to 3.3.18 (transitive via postcss/vite) for GHSA-2v37-7h3g-55p8
+- Files: `pnpm-workspace.yaml`
+- Impact: none today; revisit when vite upgrades drop the vulnerable line
 
 ## Missing Critical Features
 
-**No E2E tests:**
-- Problem: no Playwright/Cypress coverage of the full UI flows
-- Blocks: automated confidence for cross-page flows (resume import → bio/job)
-
-**No server-side AI relay:**
-- Problem: all keyed AI providers are called from the browser
-- Blocks: safe use of paid provider keys without client exposure
+- **Server-side/CI integration tests:** no tests exercise the API routes or DB layer; the `api.resume` cloud-sync path is untested
+- **cv-extract.ts has no unit tests:** PDF/DOCX extraction is only verified manually (real-file end-to-end); a regression in mammoth/pdfjs wiring would go unnoticed in CI
+- **E2E coverage:** no browser tests (Playwright/Cypress) for the multi-step flows (CV import → edit → confirm, generate → history)
 
 ## Test Coverage Gaps
 
-**Untested service modules:**
-- What's not tested: `cv-extract.ts` (PDF/DOCX/TXT extraction), `job-parser.ts`, `resume-tailor.ts`, `ai-connection.ts`, `apply-suggestion.ts`, `export-{pdf,docx,json}`, `auth.server.ts`
-- Files: `app/lib/cv-extract.ts`, `app/lib/job-parser.ts`, `app/lib/resume-tailor.ts`, `app/lib/ai-connection.ts`
-- Risk: regressions in parsing/extraction/export go unnoticed (not in `coverage.include`)
-- Priority: Medium
+- **`cv-extract.ts` (format detection + size gate):**
+- What's not tested: `getCvFileFormat`, `MAX_CV_FILE_SIZE` gate, and the extraction dispatch
+- Files: `app/lib/cv-extract.ts`
+- Risk: format/size handling changes could regress silently
+- Priority: Medium — add to `coverage.include` with dedicated tests when the extraction functions are made testable (they need File/ArrayBuffer shims)
 
-**Low-coverage tested modules:**
-- What's not tested: `resume-parser.ts` normalization branches (~54.7%), `cv-upload.tsx` file-extraction + reset paths (~53%)
-- Files: `app/lib/resume-parser.ts`, `app/components/resume/cv-upload.tsx`
-- Risk: edge-case regressions
-- Priority: Low
+- **`use-resume-storage.ts` (localStorage + cloud sync):**
+- What's not tested: merge logic (local vs cloud `updatedAt`), debounced cloud save, 401 fallback
+- Files: `app/hooks/use-resume-storage.ts`
+- Risk: sync correctness is subtle and untested
+- Priority: Medium
 
 ---
 
-*Concerns audit: 2026-08-19*
+*Concerns audit: 2026-08-25*
