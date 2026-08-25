@@ -34,6 +34,29 @@ jobs:
             exit 1
           fi
           echo "✓ Dockerfile corepack pin ($pinned) matches packageManager ($declared)"
+      # The Dockerfile node image must satisfy the `engines.node` range in
+      # package.json, or the runtime image runs a Node major the project does
+      # not declare support for. Fail fast on drift.
+      - name: Verify Dockerfile node image satisfies engines.node
+        run: |
+          image_major=$(grep -Eo 'FROM node:[0-9]+' Dockerfile | head -1 | grep -Eo '[0-9]+')
+          range=$(grep -Eo '"node": *"[^"]*"' package.json | sed -E 's/.*"([^"]*)"/\1/')
+          if [ -z "$image_major" ]; then
+            echo "::error::Could not find a 'FROM node:<major>-alpine' base image in Dockerfile"
+            exit 1
+          fi
+          # Support the common '>=X' ranges; anything else is treated as a
+          # mismatch so the check stays conservative.
+          if ! echo "$range" | grep -Eq '^>=[0-9]+(\.[0-9]+)*$'; then
+            echo "::error::Unsupported engines.node range '$range'. Only '>=X' ranges are supported by this check."
+            exit 1
+          fi
+          min_major=$(echo "$range" | sed -E 's/^>=([0-9]+).*/\1/')
+          if [ "$image_major" -lt "$min_major" ]; then
+            echo "::error::Dockerfile node image (node:${image_major}-alpine) does not satisfy engines.node '$range' in package.json"
+            exit 1
+          fi
+          echo "✓ Dockerfile node image (node:${image_major}-alpine) satisfies engines.node ($range)"
 
   security:
     name: Dependency Security Audit
