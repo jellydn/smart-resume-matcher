@@ -57,7 +57,35 @@ jobs:
             exit 1
           fi
           echo "✓ Dockerfile node image (node:${image_major}-alpine) satisfies engines.node ($range)"
-
+      # The tsconfig `target` must be supported by the declared TypeScript
+      # version, or the build fails with an unsupported-target error. Fail fast
+      # on drift (e.g. bumping target to ES2024 while TS is pinned below 5.5).
+      - name: Verify TypeScript version supports tsconfig target
+        run: |
+          ts_ver=$(grep -Eo '"typescript": *"[^"]*"' package.json | sed -E 's/.*"([^"]*)".*/\1/')
+          target=$(grep -Eo '"target": *"[^"]*"' tsconfig.json | sed -E 's/.*"([^"]*)".*/\1/')
+          if [ -z "$ts_ver" ] || [ -z "$target" ]; then
+            echo "::error::Could not read typescript version from package.json or target from tsconfig.json"
+            exit 1
+          fi
+          # Strip common range prefixes (^ ~ >=) to get the bare version.
+          ts_ver=$(echo "$ts_ver" | sed -E 's/^(\^|~|>=)+//')
+          ts_major=$(echo "$ts_ver" | cut -d. -f1)
+          ts_minor=$(echo "$ts_ver" | cut -d. -f2)
+          # Minimum TypeScript version that supports each target (from the
+          # TypeScript release notes): ES2022=4.6, ES2023=5.2, ES2024=5.5.
+          case "$target" in
+            ES2024) req_major=5; req_minor=5 ;;
+            ES2023) req_major=5; req_minor=2 ;;
+            ES2022) req_major=4; req_minor=6 ;;
+            ESNext|ES2021|ES2020|ES2019|ES2018|ES2017|ES2016|ES2015|ES6|ES5|ES3) req_major=0; req_minor=0 ;;
+            *) echo "::error::Unsupported tsconfig target '$target'. Update this check or use a known target."; exit 1 ;;
+          esac
+          if [ "$ts_major" -lt "$req_major" ] || { [ "$ts_major" -eq "$req_major" ] && [ "$ts_minor" -lt "$req_minor" ]; }; then
+            echo "::error::TypeScript $ts_ver does not support tsconfig target '$target' (requires >=$req_major.$req_minor)"
+            exit 1
+          fi
+          echo "✓ TypeScript $ts_ver supports tsconfig target ($target)"
   security:
     name: Dependency Security Audit
     runs-on: ubuntu-latest
