@@ -1,7 +1,7 @@
 FROM node:24-alpine AS base
-# Keep this in sync with the `packageManager` field in package.json (pnpm@11.20.0)
+# Keep this in sync with the `packageManager` field in package.json (pnpm@11.28.11)
 # so the runtime image matches the declared toolchain.
-RUN corepack enable && corepack prepare pnpm@11.20.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.28.11 --activate
 
 FROM base AS build-deps
 RUN apk add --no-cache python3 make g++
