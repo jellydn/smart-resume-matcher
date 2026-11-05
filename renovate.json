@@ -1,20 +1,18 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": ["config:recommended"],
+	"lockFileMaintenance": {
+		"enabled": true
+	},
 	"packageRules": [
 		{
-			"matchUpdateTypes": [
-				"patch",
-				"minor",
-				"digest",
-				"pin",
-				"lockFileMaintenance"
-			],
+			"matchUpdateTypes": ["patch", "minor", "digest", "pin"],
+			"matchCurrentVersion": "!/^0/",
 			"automerge": true,
 			"platformAutomerge": true
 		},
 		{
-			"matchUpdateTypes": ["major"],
+			"matchUpdateTypes": ["major", "lockFileMaintenance"],
 			"automerge": false
 		}
 	]
