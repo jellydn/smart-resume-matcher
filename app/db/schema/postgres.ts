@@ -1,5 +1,6 @@
 import {
 	boolean,
+	index,
 	jsonb,
 	pgTable,
 	text,
@@ -24,6 +25,8 @@ export const sessions = pgTable("sessions", {
 		.references(() => users.id, { onDelete: "cascade" }),
 	expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
 	token: text("token").notNull().unique(),
+	ipAddress: text("ip_address"),
+	userAgent: text("user_agent"),
 	createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
@@ -35,6 +38,7 @@ export const accounts = pgTable("accounts", {
 		.references(() => users.id, { onDelete: "cascade" }),
 	provider: text("provider").notNull(),
 	providerAccountId: text("provider_account_id").notNull(),
+	password: text("password"),
 	accessToken: text("access_token"),
 	refreshToken: text("refresh_token"),
 	accessTokenExpiresAt: timestamp("access_token_expires_at", { mode: "date" }),
@@ -47,6 +51,19 @@ export const accounts = pgTable("accounts", {
 	createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
+
+export const verifications = pgTable(
+	"verifications",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		identifier: text("identifier").notNull(),
+		value: text("value").notNull(),
+		expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+		createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+		updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+	},
+	(table) => [index("verifications_identifier_idx").on(table.identifier)],
+);
 
 export const userResumes = pgTable("user_resumes", {
 	id: uuid("id").defaultRandom().primaryKey(),

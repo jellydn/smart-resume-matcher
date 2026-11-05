@@ -22,7 +22,7 @@ const sqliteConfig = defineConfig({
 	dbCredentials: {
 		url: env.databasePath,
 	},
-	out: "./drizzle/sqlite",
+	out: "./drizzle",
 });
 
 export default isPostgres ? postgresConfig : sqliteConfig;

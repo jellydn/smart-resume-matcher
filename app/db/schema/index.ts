@@ -10,6 +10,7 @@ const selectedSchema = isPostgres ? postgresSchema : sqliteSchema;
 export const users = selectedSchema.users;
 export const sessions = selectedSchema.sessions;
 export const accounts = selectedSchema.accounts;
+export const verifications = selectedSchema.verifications;
 export const userResumes = selectedSchema.userResumes;
 
 // Types - both schemas have identical structure; prefer sqlite types
