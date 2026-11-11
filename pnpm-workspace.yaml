@@ -25,3 +25,7 @@ overrides:
   # nanoid <3.3.18 (transitive via postcss/vite) is vulnerable to GHSA-2v37-7h3g-55p8.
   # Scoped to the v3 line so docx's nanoid@5 stays untouched.
   "nanoid@<3.3.18": 6.0.1
+  # Keep vulnerable transitive resolutions on patched, compatible release lines.
+  "fast-uri@>=3.0.0 <3.1.7": ^3.1.7
+  "brace-expansion@>=2.0.0 <2.1.6": ^2.1.7
+  "brace-expansion@>=5.0.0 <5.0.11": ^5.0.11

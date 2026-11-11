@@ -123,8 +123,13 @@ Click "Test Connection" to verify your API key works.
 | `DATABASE_TYPE`           | Database engine: `sqlite` or `postgres`              | No          | `sqlite`           |
 | `DATABASE_PATH`           | SQLite database file path (local development)        | No          | `./data/sqlite.db` |
 | `DATABASE_URL`            | PostgreSQL connection URL (required for `postgres`)  | Conditional | -                  |
+| `BETTER_AUTH_SECRET`      | Private, persistent auth signing secret (at least 32 characters); keep the same value across app instances | Production | - |
 | `APP_URL`                 | Public URL of your deployment (e.g. `https://app.example.com`); used as the default trusted origin for auth | No          | -                  |
 | `AUTH_TRUSTED_ORIGINS`    | Comma-separated list of allowed auth origins; overrides `APP_URL` when multiple domains must be trusted | No          | `APP_URL` or `http://localhost:5173` |
+
+Before using authentication, initialize or migrate its database. See the
+[auth migration and rollout plan](doc/auth-rollout.md) for fresh databases,
+existing SQLite/PostgreSQL installations, verification, and rollback limits.
 
 ### Local Storage Keys
 

@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
 	id: text("id").primaryKey(),
@@ -21,6 +21,8 @@ export const sessions = sqliteTable("sessions", {
 		.references(() => users.id, { onDelete: "cascade" }),
 	expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
 	token: text("token").notNull().unique(),
+	ipAddress: text("ip_address"),
+	userAgent: text("user_agent"),
 	createdAt: integer("created_at", { mode: "timestamp" })
 		.notNull()
 		.$defaultFn(() => new Date()),
@@ -36,6 +38,7 @@ export const accounts = sqliteTable("accounts", {
 		.references(() => users.id, { onDelete: "cascade" }),
 	provider: text("provider").notNull(),
 	providerAccountId: text("provider_account_id").notNull(),
+	password: text("password"),
 	accessToken: text("access_token"),
 	refreshToken: text("refresh_token"),
 	accessTokenExpiresAt: integer("access_token_expires_at", {
@@ -54,6 +57,23 @@ export const accounts = sqliteTable("accounts", {
 		.notNull()
 		.$defaultFn(() => new Date()),
 });
+
+export const verifications = sqliteTable(
+	"verifications",
+	{
+		id: text("id").primaryKey(),
+		identifier: text("identifier").notNull(),
+		value: text("value").notNull(),
+		expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp" })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		updatedAt: integer("updated_at", { mode: "timestamp" })
+			.notNull()
+			.$defaultFn(() => new Date()),
+	},
+	(table) => [index("verifications_identifier_idx").on(table.identifier)],
+);
 
 export const userResumes = sqliteTable("user_resumes", {
 	id: text("id").primaryKey(),
