@@ -24,12 +24,14 @@ export default defineConfig({
 			// The round-down keeps a few points of headroom so minor V8/Node
 			// version variance doesn't cause false CI failures.
 			include: [
+				"app/lib/auth.server.ts",
 				"app/lib/bio-generator.ts",
 				"app/lib/resume-parser.ts",
 				"app/lib/cv-extract.ts",
 				"app/components/resume/cv-upload.tsx",
 				"app/hooks/use-bio-history.ts",
 				"app/hooks/use-resume-storage.ts",
+				"app/routes/api.resume.tsx",
 			],
 			thresholds: {
 				statements: 75,
