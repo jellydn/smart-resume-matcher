@@ -1,11 +1,23 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "~/db";
+import { isPostgres } from "~/lib/env";
 
 export const auth = betterAuth({
+	baseURL: process.env.APP_URL,
 	database: drizzleAdapter(db, {
-		provider: "sqlite",
+		provider: isPostgres ? "pg" : "sqlite",
+		usePlural: true,
 	}),
+	advanced: {
+		database: { generateId: "uuid" },
+	},
+	account: {
+		fields: {
+			providerId: "provider",
+			accountId: "providerAccountId",
+		},
+	},
 	emailAndPassword: {
 		enabled: true,
 		minPasswordLength: 8,
