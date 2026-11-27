@@ -67,7 +67,7 @@ importers:
         version: 2.1.1
       docx:
         specifier: ^9.5.1
-        version: 9.16.0
+        version: 9.16.1
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.4(@types/better-sqlite3@9.6.0)(@types/pg@8.23.1)(better-sqlite3@13.2.0)(kysely@0.29.8)(postgres@3.4.9)
@@ -2710,8 +2710,8 @@ packages:
   dingbat-to-unicode@1.0.1:
     resolution: {integrity: sha512-98l0sW87ZT58pU4i61wa2OHwxbiYSbuxsCBozaVnYX2iCnr3bLM3fIes1/ej7h1YdOKuKt/MLs706TVnALA65w==}
 
-  docx@9.16.0:
-    resolution: {integrity: sha512-fvAuqxV0705bEQ9OGPLt6onJqufGJTMS+b7PtRxNktea+iPWYgc1zO+OQBMW9ZmRLj9THTnOeiAoxTDz2ub0Fw==}
+  docx@9.16.1:
+    resolution: {integrity: sha512-AL6ECiw4TIz74jTk5/DpLCDNyhONelWLyLy35rKAbhihhpX28AuirWStdUsNn9DuTtzxCv+sT7Ta4WBlF7JixQ==}
     engines: {node: '>=16'}
 
   dom-accessibility-api@0.5.16:
@@ -6862,7 +6862,7 @@ snapshots:
 
   dingbat-to-unicode@1.0.1: {}
 
-  docx@9.16.0:
+  docx@9.16.1:
     dependencies:
       '@types/node': 26.6.6
       fflate: 0.8.3
