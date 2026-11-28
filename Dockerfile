@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 # Keep this in sync with the `packageManager` field in package.json (pnpm@11.28.11)
 # so the runtime image matches the declared toolchain.
 RUN corepack enable && corepack prepare pnpm@11.28.11 --activate
